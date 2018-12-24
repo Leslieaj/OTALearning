@@ -230,7 +230,7 @@ def main():
     s2 = State(L3, 3.0)
     print(s1.show())
     print(s2.show())
-    
+
     print("------------------A-----------------")
     paras = sys.argv
     A,_ = buildOTA(paras[1])
