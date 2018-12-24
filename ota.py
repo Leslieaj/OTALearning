@@ -3,7 +3,7 @@
 
 import sys
 import json
-from interval import Constraint
+from interval import Constraint, complement_intervals
 
 class Location(object):
     """
@@ -82,21 +82,28 @@ class OTA(object):
         """
             Get the max time value constant appearing in OTA.
             Return "max_time_value" for the max time value constant;
-            Return "closed" for indicating whether we can reach the max time value constant.
+            #Return "closed" for indicating whether we can reach the max time value constant.
         """
         max_time_value = 0
-        closed_flag = True
+        #closed_flag = True
         for tran in self.trans:
             for c in tran.constraints:
+                temp_max_value = 0
+                #temp_closed = True
                 if c.max_value == '+':
-                    continue
+                    temp_max_value = int(c.min_value)
+                    #temp_closed = c.closed_min
                 else:
                     temp_max_value = int(c.max_value)
-                    temp_closed = c.closed_max
-                    if max_time_value < temp_max_value:
-                        max_time_value = temp_max_value
-                        closed_flag = temp_closed
-        return max_time_value, closed_flag
+                    #temp_closed = c.closed_max
+                if max_time_value < temp_max_value:
+                    max_time_value = temp_max_value
+                    #closed_flag = temp_closed
+                #elif max_time_value == temp_max_value:
+                    #closed_flag = closed_flag or temp_closed
+                #else:
+                    #pass
+        return max_time_value
 
     def show(self):
         print("OTA name: ")
@@ -115,7 +122,7 @@ class OTA(object):
         print("accept states: ")
         print(self.accept_names)
 
-def buildRTA(jsonfile):
+def buildOTA(jsonfile):
     """
         build the teacher OTA from a json file.
     """
@@ -152,6 +159,55 @@ def buildRTA(jsonfile):
         trans += [ota_tran]
     return OTA(name, sigma, L, trans, initstate, accept_list), sigma
 
+def buildAssistantOTA(ota):
+    """
+        build an assistant OTA which has the partitions at every node.
+        The acceptance language is equal to teacher.
+    """
+    location_number = len(ota.locations)
+    tran_number = len(ota.trans)
+    new_location = Location(str(location_number+1), False, False)
+    flag = False
+    new_trans = []
+    for l in ota.locations:
+        l_dict = {}
+        for key in ota.sigma:
+            l_dict[key] = []
+        for tran in ota.trans:
+            if tran.source == l.name:
+                for label in ota.sigma:
+                    if tran.label == label:
+                        for constraint in tran.constraints:
+                            l_dict[label].append(constraint)
+        for key in l_dict:
+            cuintervals = []
+            if len(l_dict[key]) > 0:
+                cuintervals = complement_intervals(l_dict[key])
+            else:
+                cuintervals = [Constraint("[0,+)")]
+            if len(cuintervals) > 0:
+                for c in cuintervals:
+                    reset = True
+                    temp_tran = OTATran(tran_number, l.name, key, [c], reset, new_location.name)
+                    tran_number = tran_number+1
+                    new_trans.append(temp_tran)
+    assist_name = "Assist_"+ota.name
+    assist_locations = [location for location in ota.locations]
+    assist_trans = [tran for tran in ota.trans]
+    assist_init = ota.initstate_name
+    assist_accepts = [sn for sn in ota.accept_names]
+    if len(new_trans) > 0:
+        assist_locations.append(new_location)
+        for tran in new_trans:
+            assist_trans.append(tran)
+        for label in ota.sigma:
+            constraints = [Constraint("[0,+)")]
+            reset = True
+            temp_tran = OTATran(tran_number, new_location.name, label, constraints, reset, new_location.name)
+            tran_number = tran_number+1
+            assist_trans.append(temp_tran)
+    return OTA(assist_name, ota.sigma, assist_locations, assist_trans, assist_init, assist_accepts)
+
 def main():
     L1 = Location("1", True, False)
     L2 = Location("2", False, False)
@@ -166,12 +222,15 @@ def main():
     print(s1.show())
     print(s2.show())
     
-    print("-----------------------------------")
+    print("------------------A-----------------")
     paras = sys.argv
-    A,_ = buildRTA(paras[1])
+    A,_ = buildOTA(paras[1])
     A.show()
+    print("------------------Assist-----------------")
+    AA = buildAssistantOTA(A)
+    AA.show()
     print("--------------max value---------------------")
-    print(A.max_time_value())
+    print(AA.max_time_value())
 
 if __name__=='__main__':
 	main()
