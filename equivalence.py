@@ -2,7 +2,7 @@
 
 from ota import *
 
-def get_regions(max_time_value, closed_flag):
+def get_regions(max_time_value):
     """
         Partition R into a finite collection of one-dimensional regions depending on the appearing max time value.
     """
@@ -23,15 +23,24 @@ def get_regions(max_time_value, closed_flag):
                 regions.append(r)
     return regions
 
+def configuration_to_letterword(config):
+    """
+        Transform an A/B-configuration to a letterword.
+    """
+    return 0
+
 def main():
     paras = sys.argv
-    A,_ = buildRTA(paras[1])
+    A,_ = buildOTA(paras[1])
     A.show()
+    print("------------------Assist-----------------")
+    AA = buildAssistantOTA(A, 's')
+    AA.show()
     print("--------------max value---------------------")
-    max_time_value, closed_flag = A.max_time_value()
-    print(max_time_value, closed_flag)
+    max_time_value = AA.max_time_value()
+    print(max_time_value)
     print("--------------all regions---------------------")
-    regions = get_regions(max_time_value, closed_flag)
+    regions = get_regions(max_time_value)
     for r in regions:
         print(r.show())
 

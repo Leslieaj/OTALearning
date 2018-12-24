@@ -8,18 +8,25 @@ from interval import Constraint, complement_intervals
 class Location(object):
     """
         The definition of location.
-        "Name" for location name, "init" for indicating the initial state, "accept" for indicating accepting states.
+        "Name" for location name;
+        "init" for indicating the initial state;
+        "accept" for indicating accepting states;
+        "flag" for indicating the OTA
     """
-    def __init__(self, name="", init=False, accept=False):
+    def __init__(self, name="", init=False, accept=False, flag='s'):
         self.name = name
         self.init = init
         self.accept = accept
+        self.flag = flag
 
-    def getName(self):
+    def get_name(self):
         return self.name
 
+    def get_flagname(self):
+        return self.flag+'_'+self.name
+
     def show(self):
-        return self.name + ',' + str(self.init) + ',' + str(self.accept)
+        return self.get_flagname() + ',' + str(self.init) + ',' + str(self.accept)
 
 class State(object):
     """
@@ -31,7 +38,7 @@ class State(object):
         self.v = v
 
     def show(self):
-        return "(" + self.location.getName() + "," + str(self.v) + ")"
+        return "(" + self.location.get_flagname() + "," + str(self.v) + ")"
 
 class OTATran(object):
     """
@@ -41,14 +48,16 @@ class OTATran(object):
         "label" for the action name;
         "reset" for indicating whether the clock resets or not;
         "constraints" for the timing constraints.
+        "flag" for indicating the OTA
     """
-    def __init__(self, id, source="", label="", constraints=None, reset=False, target=""):
+    def __init__(self, id, source="", label="", constraints=None, reset=False, target="", flag=""):
         self.id = id
         self.source = source
         self.label = label
         self.constraints = constraints or []
         self.reset = reset
         self.target = target
+        self.flag = flag
 
     def show_constraints(self):
         length = len(self.constraints)
@@ -112,10 +121,10 @@ class OTA(object):
         print(self.sigma, len(self.sigma))
         print("Location (name, init, accept) :")
         for l in self.locations:
-            print(l.name, l.init, l.accept)
+            print(l.show())
         print("transitions (id, source_state, label, target_state, constraints, reset): ")
         for t in self.trans:
-            print(t.id, t.source, t.label, t.target, t.show_constraints(), t.reset)
+            print(t.id, t.flag+'_'+t.source, t.label, t.flag+'_'+t.target, t.show_constraints(), t.reset)
             print
         print("init state: ")
         print(self.initstate_name)
@@ -126,6 +135,7 @@ def buildOTA(jsonfile):
     """
         build the teacher OTA from a json file.
     """
+    otaflag = 's'
     data = json.load(open(jsonfile,'r'))
     name = data["name"]
     locations_list = [l for l in data["l"]]
@@ -155,18 +165,18 @@ def buildOTA(jsonfile):
         if reset_temp == "r":
             reset = True
         target = trans_set[tran][4]
-        ota_tran = OTATran(tran_id, source, label, constraints_list, reset, target)
+        ota_tran = OTATran(tran_id, source, label, constraints_list, reset, target, otaflag)
         trans += [ota_tran]
     return OTA(name, sigma, L, trans, initstate, accept_list), sigma
 
-def buildAssistantOTA(ota):
+def buildAssistantOTA(ota, otaflag):
     """
         build an assistant OTA which has the partitions at every node.
         The acceptance language is equal to teacher.
     """
     location_number = len(ota.locations)
     tran_number = len(ota.trans)
-    new_location = Location(str(location_number+1), False, False)
+    new_location = Location(str(location_number+1), False, False, otaflag)
     flag = False
     new_trans = []
     for l in ota.locations:
@@ -188,7 +198,7 @@ def buildAssistantOTA(ota):
             if len(cuintervals) > 0:
                 for c in cuintervals:
                     reset = True
-                    temp_tran = OTATran(tran_number, l.name, key, [c], reset, new_location.name)
+                    temp_tran = OTATran(tran_number, l.name, key, [c], reset, new_location.name, otaflag)
                     tran_number = tran_number+1
                     new_trans.append(temp_tran)
     assist_name = "Assist_"+ota.name
@@ -203,7 +213,7 @@ def buildAssistantOTA(ota):
         for label in ota.sigma:
             constraints = [Constraint("[0,+)")]
             reset = True
-            temp_tran = OTATran(tran_number, new_location.name, label, constraints, reset, new_location.name)
+            temp_tran = OTATran(tran_number, new_location.name, label, constraints, reset, new_location.name, otaflag)
             tran_number = tran_number+1
             assist_trans.append(temp_tran)
     return OTA(assist_name, ota.sigma, assist_locations, assist_trans, assist_init, assist_accepts)
@@ -213,10 +223,9 @@ def main():
     L2 = Location("2", False, False)
     L3 = Location("3", False, True)
     print(L1.show())
-    print(type(L1.getName()))
+    print(type(L1.get_name()))
     print(L2.show())
     print(L3.show())
-
     s1 = State(L1, 1.2)
     s2 = State(L3, 3.0)
     print(s1.show())
@@ -227,7 +236,7 @@ def main():
     A,_ = buildOTA(paras[1])
     A.show()
     print("------------------Assist-----------------")
-    AA = buildAssistantOTA(A)
+    AA = buildAssistantOTA(A, 's')
     AA.show()
     print("--------------max value---------------------")
     print(AA.max_time_value())
