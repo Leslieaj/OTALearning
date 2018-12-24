@@ -77,6 +77,26 @@ class OTA(object):
         self.trans = trans or []
         self.initstate_name = init
         self.accept_names = accepts or []
+    
+    def max_time_value(self):
+        """
+            Get the max time value constant appearing in OTA.
+            Return "max_time_value" for the max time value constant;
+            Return "closed" for indicating whether we can reach the max time value constant.
+        """
+        max_time_value = 0
+        closed_flag = True
+        for tran in self.trans:
+            for c in tran.constraints:
+                if c.max_value == '+':
+                    continue
+                else:
+                    temp_max_value = int(c.max_value)
+                    temp_closed = c.closed_max
+                    if max_time_value < temp_max_value:
+                        max_time_value = temp_max_value
+                        closed_flag = temp_closed
+        return max_time_value, closed_flag
 
     def show(self):
         print("OTA name: ")
@@ -150,7 +170,8 @@ def main():
     paras = sys.argv
     A,_ = buildRTA(paras[1])
     A.show()
-    
+    print("--------------max value---------------------")
+    print(A.max_time_value())
 
 if __name__=='__main__':
 	main()
