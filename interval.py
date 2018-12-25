@@ -214,6 +214,12 @@ class Constraint:
     def show(self):
         return self.guard
 
+    def __str__(self):
+        return self.show()
+        
+    def __repr__(self):
+        return self.show()
+
 def min_constraint_number(c):
     """
         get the minimal number in a interval.

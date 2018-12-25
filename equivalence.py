@@ -140,12 +140,20 @@ def letterword_dominated(lw1, lw2):
     else:
         return False
 
-def letterword_succ(letterword):
+def letterword_succ(letterword, ota1, ota2):
     """
     """
+    results = compute_wsucc(letterword, ota1.max_time_value())
+    ABconfig = letterword_to_configuration(letterword)
+    Bstate = ABconfig.Bstate
+    for tran in ota2.trans:
+        if tran.source == Bstate.location.name:    
+            action = tran.label
+            tran_constraint = tran.constraints[0]
+            #intersect_constraint(tran_constraint, )
     return 0
 
-def letterword_to_configuration(letterword):
+def letterword_to_configuration(letterword, flag):
     """
         Transform a letterword to A/B-configuration.
     """
@@ -155,7 +163,7 @@ def letterword_to_configuration(letterword):
     for letters, i in zip(letterword, range(lwlen)):
         for letter in letters:
             state = letter.to_state(i)
-            if state.location.flag == 's':
+            if state.location.flag == flag:
                 G.append(state)
             else:
                 Bstate = state
@@ -176,7 +184,7 @@ def next_region(region, max_time_value):
             return Constraint('[' + region.max_value + ',' + region.max_value + ']')
 
 def compute_wsucc(letterword, max_time_value):
-    """
+    """Compute the Succ of letterword.
     """
     results = []
     if len(letterword) == 1:
@@ -265,18 +273,19 @@ def main():
     Ac2 = [s1,s2,s4]
     ABConfig2 = ABConfiguration(Ac2, Bstate)
     letterword2 = ABConfig2.configuration_to_letterword(max_time_value)
-    for letters in letterword2:
-        print([l.show() for l in letters])
+    #for letters in letterword2:
+        #print([l.show() for l in letters])
+    print(letterword2)
     print(letterword_dominated(letterword2,letterword))
     print("----------------------letterword_to_configuration-----------------")
-    ABConfig3 = letterword_to_configuration(letterword)
+    ABConfig3 = letterword_to_configuration(letterword, 's')
     print([state.show() for state in ABConfig3.Aconfig])
     print(ABConfig3.Bstate.show())
     print("----------------next_region---------------------------")
-    print(next_region(regions[2], max_time_value).show())
-    print(next_region(regions[8], max_time_value).show())
+    print(next_region(regions[2], max_time_value))
+    print(next_region(regions[8], max_time_value))
     print(next_region(regions[9], max_time_value))
-    print(next_region(regions[5], max_time_value).show())
+    print(next_region(regions[5], max_time_value))
     print("----------------compute_wsucc----------------------")
     w = [[Letter(L1, regions[0]), Letter(L2, regions[2])]]
     wsucc = compute_wsucc(w, max_time_value)
@@ -292,7 +301,7 @@ def main():
     for letterword in wsucc:
         print(letterword)
     print()
-    w = [[Letter(L1, regions[1])], [Letter(L2, regions[1])]]
+    w = [[Letter(L1, regions[1])], [Letter(L3, regions[1])]]
     wsucc = compute_wsucc(w, max_time_value)
     for letterword in wsucc:
         print(letterword)

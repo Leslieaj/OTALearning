@@ -142,11 +142,11 @@ class OTA(object):
         print("accept states: ")
         print(self.accept_names)
 
-def buildOTA(jsonfile):
+def buildOTA(jsonfile, otaflag):
     """
         build the teacher OTA from a json file.
     """
-    otaflag = 's'
+    #otaflag = 's'
     data = json.load(open(jsonfile,'r'))
     name = data["name"]
     locations_list = [l for l in data["l"]]
@@ -244,7 +244,7 @@ def main():
 
     print("------------------A-----------------")
     paras = sys.argv
-    A,_ = buildOTA(paras[1])
+    A,_ = buildOTA(paras[1], 's')
     A.show()
     print("------------------Assist-----------------")
     AA = buildAssistantOTA(A, 's')
