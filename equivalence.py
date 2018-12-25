@@ -150,6 +150,8 @@ def letterword_succ(letterword, ota1, ota2):
         if tran.source == Bstate.location.name:    
             action = tran.label
             tran_constraint = tran.constraints[0]
+            #for letterword in results:
+                
             #intersect_constraint(tran_constraint, )
     return 0
 
