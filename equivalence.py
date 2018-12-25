@@ -184,5 +184,5 @@ def main():
         print([l.show() for l in letters])
     print(letterword_dominated(letterword2,letterword))
 
-if __name__=='__main__':
+if __name__ == '__main__':
 	main()
