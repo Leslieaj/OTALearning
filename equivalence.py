@@ -237,7 +237,7 @@ def main():
     print(s2.show())
     print("---------------A------------------")
     paras = sys.argv
-    A,_ = buildOTA(paras[1])
+    A,_ = buildOTA(paras[1], 's')
     A.show()
     print("------------------Assist-----------------")
     AA = buildAssistantOTA(A, 's')
