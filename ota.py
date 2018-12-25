@@ -19,6 +19,12 @@ class Location(object):
         self.accept = accept
         self.flag = flag
 
+    def __eq__(self, location):
+        if self.name == location.name and self.init == location.init and self.accept == location.accept and self.flag == location.flag:
+            return True
+        else:
+            return False
+
     def get_name(self):
         return self.name
 

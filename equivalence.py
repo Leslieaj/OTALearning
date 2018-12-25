@@ -48,6 +48,13 @@ class Letter(object):
     def __init__(self, location, constraint):
         self.location = location
         self.constraint = constraint
+    
+    def __eq__(self, letter):
+        if self.location == letter.location and self.constraint == letter.constraint:
+            return True
+        else:
+            return False
+
     def show(self):
         return self.location.get_flagname() + ',' + self.constraint.show()
 
@@ -77,6 +84,44 @@ class ABConfiguration(object):
                 current_fraction = state.get_fraction()
         letterword = [[state_to_letter(state, max_time_value) for state in letter] for letter in temp_letterword]   
         return letterword
+
+def is_letters_subset(letters1, letters2):
+    """
+        To determin whether letters1 is a subset of letters2.
+    
+    if set(letters1).issubset(set(letters2)):
+        return True
+    else:
+        return False
+    """
+    flag = True
+    for letter in letters1:
+        if letter in letters2:
+            pass
+        else:
+            flag = False
+            break
+    return flag
+    
+def letterword_dominated(lw1, lw2):
+    """
+        To determin whether letterword lw1 is dominated by letterword lw2 (lw1 <= lw2)
+    """
+    index = 0
+    flag = 0
+    for letters1 in lw1:
+        for i in range(index, len(lw2)):
+            if is_letters_subset(letters1, lw2[i]):
+                index = i+1
+                flag = flag + 1
+                break
+            else:
+                pass
+    #print(flag)
+    if flag == len(lw1):
+        return True
+    else:
+        return False
 
 def main():
     L1 = Location("1", True, False, 's')
@@ -112,6 +157,8 @@ def main():
     print("-------------------------------------")
     letter1 = state_to_letter(s1, max_time_value)
     letter2 = state_to_letter(s2, max_time_value)
+    letter3 = state_to_letter(s3, max_time_value)
+    letter5 = state_to_letter(s5, max_time_value)
     print(letter1.show())
     print(letter2.show())
     print("---------------AB-configuration------------------")
@@ -119,8 +166,23 @@ def main():
     Bstate = q2
     ABConfig = ABConfiguration(Ac, Bstate)
     letterword = ABConfig.configuration_to_letterword(max_time_value)
-    for letter in letterword:
-        print([l.show() for l in letter])
+    for letters in letterword:
+        print([l.show() for l in letters])
+    print("-----------------------letters-----------------------")
+    letters1 = letterword[0]
+    letters2 = letterword[1]
+    letters3 = [letter5, letter1]
+    letters4 = [letter1]
+    print(is_letters_subset(letters1, letters2))
+    print(is_letters_subset(letters3, letters1))
+    print(is_letters_subset(letters4, letters1))
+    print("----------------------dominated----------------------")
+    Ac2 = [s1,s2,s4]
+    ABConfig2 = ABConfiguration(Ac2, Bstate)
+    letterword2 = ABConfig2.configuration_to_letterword(max_time_value)
+    for letters in letterword2:
+        print([l.show() for l in letters])
+    print(letterword_dominated(letterword2,letterword))
 
 if __name__=='__main__':
 	main()
