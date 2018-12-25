@@ -36,6 +36,11 @@ class State(object):
     def __init__(self, location, v):
         self.location = location
         self.v = v
+    
+    def get_fraction(self):
+        _, fraction_str = str(self.v).split('.')
+        fraction = float('0.'+fraction_str)
+        return fraction
 
     def show(self):
         return "(" + self.location.get_flagname() + "," + str(self.v) + ")"

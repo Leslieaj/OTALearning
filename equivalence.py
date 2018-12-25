@@ -2,7 +2,7 @@
 
 import sys
 from ota import *
-from copy import deepcopy
+import copy
 
 def get_regions(max_time_value):
     """
@@ -28,8 +28,7 @@ def get_regions(max_time_value):
 def state_to_letter(state, max_time_value):
     region = None
     integer = int(state.v)
-    _, fraction_str = str(state.v).split('.')
-    fraction = float('0.'+fraction_str)
+    fraction = state.get_fraction()
     if fraction > 0.0:
         if integer < max_time_value:
             region = Constraint('(' + str(integer) + ',' + str(integer+1) + ')')
@@ -37,7 +36,8 @@ def state_to_letter(state, max_time_value):
             region = Constraint('(' + str(integer) + ',' + '+' + ')')
     else:
         region = Constraint('[' + str(integer) + ',' + str(integer) + ']')
-    return fraction, region
+    #return fraction, region
+    return Letter(state.location, region)
 
 class Letter(object):
     """
@@ -48,6 +48,8 @@ class Letter(object):
     def __init__(self, location, constraint):
         self.location = location
         self.constraint = constraint
+    def show(self):
+        return self.location.get_flagname() + ',' + self.constraint.show()
 
 class ABConfiguration(object):
     """
@@ -57,22 +59,40 @@ class ABConfiguration(object):
         self.Aconfig = copy.deepcopy(Ac)
         self.Bstate = copy.deepcopy(Bstate)
 
-    def configuration_to_letterword(config):
+    def configuration_to_letterword(self, max_time_value):
         """
             Transform an A/B-configuration to a letterword.
         """  
-        return 0
+        allstates = [state for state in self.Aconfig]
+        allstates.append(self.Bstate)
+        allstates.sort(key=lambda x: x.get_fraction())
+        temp_letterword = []
+        current_fraction = -1
+        for state in allstates:
+            if state.get_fraction() == current_fraction:
+                temp_letterword[len(temp_letterword)-1].append(state)
+            else:
+                new_letter = [state]
+                temp_letterword.append(new_letter)
+                current_fraction = state.get_fraction()
+        letterword = [[state_to_letter(state, max_time_value) for state in letter] for letter in temp_letterword]   
+        return letterword
 
 def main():
-    L1 = Location("1", True, False)
-    L2 = Location("2", False, False)
-    L3 = Location("3", False, True)
+    L1 = Location("1", True, False, 's')
+    L2 = Location("2", False, False, 's')
+    L3 = Location("3", False, True, 'q')
     print(L1.show())
     print(type(L1.get_name()))
     print(L2.show())
     print(L3.show())
-    s1 = State(L1, 1.2)
-    s2 = State(L3, 3.0)
+    s1 = State(L1, 0.0)
+    s2 = State(L1, 0.3)
+    s3 = State(L1, 1.2)
+    s4 = State(L2, 0.4)
+    s5 = State(L2, 1.0)
+    q1 = State(L3, 0.8)
+    q2 = State(L3, 1.3)
     print(s1.show())
     print(s2.show())
     print("---------------A------------------")
@@ -90,10 +110,17 @@ def main():
     for r in regions:
         print(r.show())
     print("-------------------------------------")
-    fr1, re1 = state_to_letter(s1, max_time_value)
-    fr2, re2 = state_to_letter(s2, max_time_value)
-    print(s1.show(), fr1, re1.show())
-    print(s2.show(), fr2, re2.show())
+    letter1 = state_to_letter(s1, max_time_value)
+    letter2 = state_to_letter(s2, max_time_value)
+    print(letter1.show())
+    print(letter2.show())
+    print("---------------AB-configuration------------------")
+    Ac = [s1,s2,s3,s4,s5]
+    Bstate = q2
+    ABConfig = ABConfiguration(Ac, Bstate)
+    letterword = ABConfig.configuration_to_letterword(max_time_value)
+    for letter in letterword:
+        print([l.show() for l in letter])
 
 if __name__=='__main__':
 	main()
