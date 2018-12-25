@@ -54,9 +54,26 @@ class Letter(object):
             return True
         else:
             return False
+    def to_state(self, i):
+        """
+            Transform a letter to a state.
+        """
+        location = self.location
+        v = 0
+        if self.constraint.isPoint():
+            v = self.constraint.min_value+'.0'
+        else:
+            v = self.constraint.min_value + '.' + str(i+1)
+        return State(location, v)
 
     def show(self):
         return self.location.get_flagname() + ',' + self.constraint.show()
+        
+    def __str__(self):
+        return self.show()
+        
+    def __repr__(self):
+        return self.show()
 
 class ABConfiguration(object):
     """
@@ -123,6 +140,74 @@ def letterword_dominated(lw1, lw2):
     else:
         return False
 
+def letterword_succ(letterword):
+    """
+    """
+    return 0
+
+def letterword_to_configuration(letterword):
+    """
+        Transform a letterword to A/B-configuration.
+    """
+    lwlen = len(letterword)
+    G = []
+    Bstate = None
+    for letters, i in zip(letterword, range(lwlen)):
+        for letter in letters:
+            state = letter.to_state(i)
+            if state.location.flag == 's':
+                G.append(state)
+            else:
+                Bstate = state
+    return ABConfiguration(G, Bstate)
+
+def next_region(region, max_time_value):
+    """Returns r_0^1 for r_0, r_1 for r_0^1, etc.
+    """
+    if region.isPoint():
+        if int(region.max_value) == max_time_value:
+            return Constraint('(' + region.max_value + ',' + '+' + ')')
+        else:
+            return Constraint('(' + region.max_value + ',' + str(int(region.max_value) + 1) + ')')
+    else:
+        if region.max_value == '+':
+            return None
+        else:
+            return Constraint('[' + region.max_value + ',' + region.max_value + ']')
+
+def compute_wsucc(letterword, max_time_value):
+    """
+    """
+    results = []
+    if len(letterword) == 1:
+        result = letterword[0]
+        while all(letter.constraint is not None for letter in result):
+            results.append([result])
+            new_result = []
+            for letter in result:
+                new_letter = Letter(letter.location, next_region(letter.constraint, max_time_value))
+                new_result.append(new_letter)
+            result = new_result
+    elif len(letterword) == 2:
+        if len(letterword[0]) != 1 and len(letterword[1]) != 1:
+            raise NotImplementedError()
+        result = letterword
+        while result[0][0].constraint is not None and result[1][0].constraint is not None:
+            results.append(result)
+            new_result = []
+            l1, l2 = result[0][0], result[1][0]
+            if l1.constraint.isPoint():
+                new_result.append([Letter(l1.location, next_region(l1.constraint, max_time_value))])
+                new_result.append([l2])
+            else:
+                new_result.append([Letter(l2.location, next_region(l2.constraint, max_time_value))])
+                new_result.append([l1])
+            result = new_result
+    else:
+        raise NotImplementedError()
+
+    return results
+            
 def main():
     L1 = Location("1", True, False, 's')
     L2 = Location("2", False, False, 's')
@@ -183,6 +268,36 @@ def main():
     for letters in letterword2:
         print([l.show() for l in letters])
     print(letterword_dominated(letterword2,letterword))
-
+    print("----------------------letterword_to_configuration-----------------")
+    ABConfig3 = letterword_to_configuration(letterword)
+    print([state.show() for state in ABConfig3.Aconfig])
+    print(ABConfig3.Bstate.show())
+    print("----------------next_region---------------------------")
+    print(next_region(regions[2], max_time_value).show())
+    print(next_region(regions[8], max_time_value).show())
+    print(next_region(regions[9], max_time_value))
+    print(next_region(regions[5], max_time_value).show())
+    print("----------------compute_wsucc----------------------")
+    w = [[Letter(L1, regions[0]), Letter(L2, regions[2])]]
+    wsucc = compute_wsucc(w, max_time_value)
+    for letterword in wsucc:
+        print(letterword)
+    print()
+    w = [[Letter(L1, regions[5]), Letter(L2, regions[9])]]
+    wsucc = compute_wsucc(w, max_time_value)
+    print(wsucc)
+    print()
+    w = [[Letter(L1, regions[0])], [Letter(L2, regions[1])]]
+    wsucc = compute_wsucc(w, max_time_value)
+    for letterword in wsucc:
+        print(letterword)
+    print()
+    w = [[Letter(L1, regions[1])], [Letter(L2, regions[1])]]
+    wsucc = compute_wsucc(w, max_time_value)
+    for letterword in wsucc:
+        print(letterword)
+    
+    
+    
 if __name__ == '__main__':
 	main()
