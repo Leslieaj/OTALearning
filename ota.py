@@ -24,6 +24,9 @@ class Location(object):
             return True
         else:
             return False
+            
+    def __hash__(self):
+        return hash(("LOCATION", self.name, self.init, self.accept, self.flag))
 
     def get_name(self):
         return self.name

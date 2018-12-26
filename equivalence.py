@@ -56,6 +56,10 @@ class Letter(object):
             return True
         else:
             return False
+            
+    def __hash__(self):
+        return hash(("LETTER", self.location, self.constraint))
+    
     def to_state(self, i):
         """
             Transform a letter to a state.
@@ -96,31 +100,13 @@ class ABConfiguration(object):
         current_fraction = -1
         for state in allstates:
             if state.get_fraction() == current_fraction:
-                temp_letterword[len(temp_letterword)-1].append(state)
+                temp_letterword[len(temp_letterword)-1].add(state_to_letter(state, max_time_value))
             else:
-                new_letter = [state]
-                temp_letterword.append(new_letter)
-                current_fraction = state.get_fraction()
-        letterword = [[state_to_letter(state, max_time_value) for state in letter] for letter in temp_letterword]   
-        return letterword
-
-def is_letters_subset(letters1, letters2):
-    """
-        To determin whether letters1 is a subset of letters2.
-    
-    if set(letters1).issubset(set(letters2)):
-        return True
-    else:
-        return False
-    """
-    flag = True
-    for letter in letters1:
-        if letter in letters2:
-            pass
-        else:
-            flag = False
-            break
-    return flag
+                new_letters = set()
+                new_letters.add(state_to_letter(state, max_time_value))
+                temp_letterword.append(new_letters)
+                current_fraction = state.get_fraction() 
+        return temp_letterword
     
 def letterword_dominated(lw1, lw2):
     """
@@ -130,7 +116,7 @@ def letterword_dominated(lw1, lw2):
     flag = 0
     for letters1 in lw1:
         for i in range(index, len(lw2)):
-            if is_letters_subset(letters1, lw2[i]):
+            if letters1.issubset(lw2[i]):
                 index = i+1
                 flag = flag + 1
                 break
@@ -163,7 +149,7 @@ def immediate_asucc(letterword, ota1, ota2):
     """
     results = []
     if len(letterword) == 1:
-        letter1, letter2 = letterword[0][0], letterword[0][1]
+        letter1, letter2 = list(letterword[0])
         for action in ota2.sigma:
             B_letter = None
             A_letter = None
@@ -178,16 +164,17 @@ def immediate_asucc(letterword, ota1, ota2):
                 B_ispoint = B_letter.constraint.isPoint()
                 A_ispoint = A_letter.constraint.isPoint()
                 if A_ispoint == True and B_ispoint == True:
-                    w = [[A_letter, B_letter]]
+                    w = [{A_letter, B_letter}]
                 elif A_ispoint == True and B_ispoint == False:
-                    w = [[A_letter], [B_letter]]
+                    w = [{A_letter}, {B_letter}]
                 elif A_ispoint == False and B_ispoint == True:
-                    w = [[B_letter], [A_letter]]
+                    w = [{B_letter}, {A_letter}]
                 else:
-                    w = [[A_letter, B_letter]]
-                results.append(w)
+                    w = [{A_letter, B_letter}]
+                if w not in results:
+                    results.append(w)
     elif len(letterword) == 2:
-        letter1, letter2 = letterword[0][0], letterword[1][0]
+        letter1, letter2 = list(letterword[0])[0], list(letterword[1])[0]
         for action in ota2.sigma:
             B_letter = None
             A_letter = None
@@ -199,14 +186,15 @@ def immediate_asucc(letterword, ota1, ota2):
                     B_ispoint = B_letter.constraint.isPoint()
                     A_ispoint = A_letter.constraint.isPoint()
                     if A_ispoint == True and B_ispoint == True:
-                        w = [[A_letter, B_letter]]
+                        w = [{A_letter, B_letter}]
                     elif A_ispoint == True and B_ispoint == False:
-                        w = [[A_letter], [B_letter]]
+                        w = [{A_letter}, {B_letter}]
                     elif A_ispoint == False and B_ispoint == True:
-                        w = [[B_letter], [A_letter]]
+                        w = [{B_letter}, {A_letter}]
                     else:
-                        w = [[A_letter], [B_letter]]
-                    results.append(w)
+                        w = [{A_letter}, {B_letter}]
+                    if w not in results:
+                        results.append(w)
             else:
                 B_letter = immediate_letter_asucc(letter1, action, ota2)
                 A_letter = immediate_letter_asucc(letter2, action, ota1)
@@ -214,14 +202,15 @@ def immediate_asucc(letterword, ota1, ota2):
                     B_ispoint = B_letter.constraint.isPoint()
                     A_ispoint = A_letter.constraint.isPoint()
                     if A_ispoint == True and B_ispoint == True:
-                        w = [[A_letter, B_letter]]
+                        w = [{A_letter, B_letter}]
                     elif A_ispoint == True and B_ispoint == False:
-                        w = [[A_letter], [B_letter]]
+                        w = [{A_letter}, {B_letter}]
                     elif A_ispoint == False and B_ispoint == True:
-                        w = [[B_letter], [A_letter]]
+                        w = [{B_letter}, {A_letter}]
                     else:
-                        w = [[B_letter], [A_letter]]
-                    results.append(w)
+                        w = [{B_letter}, {A_letter}]
+                    if w not in results:
+                        results.append(w)
     return results
 
 def letterword_to_configuration(letterword, flag):
@@ -232,7 +221,7 @@ def letterword_to_configuration(letterword, flag):
     G = []
     Bstate = None
     for letters, i in zip(letterword, range(lwlen)):
-        for letter in letters:
+        for letter in list(letters):
             state = letter.to_state(i)
             if state.location.flag == flag:
                 G.append(state)
@@ -263,25 +252,25 @@ def compute_wsucc(letterword, max_time_value, ota1, ota2):
         result = letterword[0]
         while all(letter.constraint is not None for letter in result):
             results.append([result])
-            new_result = []
+            new_result = set()
             for letter in result:
                 new_letter = Letter(letter.location, next_region(letter.constraint, max_time_value))
-                new_result.append(new_letter)
+                new_result.add(new_letter)
             result = new_result
     elif len(letterword) == 2:
         if len(letterword[0]) != 1 and len(letterword[1]) != 1:
             raise NotImplementedError()
         result = letterword
-        while result[0][0].constraint is not None and result[1][0].constraint is not None:
+        while list(result[0])[0].constraint is not None and list(result[1])[0].constraint is not None:
             results.append(result)
             new_result = []
-            l1, l2 = result[0][0], result[1][0]
+            l1, l2 = list(result[0])[0], list(result[1])[0]
             if l1.constraint.isPoint():
-                new_result.append([Letter(l1.location, next_region(l1.constraint, max_time_value))])
-                new_result.append([l2])
+                new_result.append({Letter(l1.location, next_region(l1.constraint, max_time_value))})
+                new_result.append({l2})
             else:
-                new_result.append([Letter(l2.location, next_region(l2.constraint, max_time_value))])
-                new_result.append([l1])
+                new_result.append({Letter(l2.location, next_region(l2.constraint, max_time_value))})
+                new_result.append({l1})
             result = new_result
     else:
         raise NotImplementedError()
@@ -289,7 +278,10 @@ def compute_wsucc(letterword, max_time_value, ota1, ota2):
     # Next, perform the immediate 'a' transition
     next = []
     for letterword in results:
-        next.extend(immediate_asucc(letterword, ota1, ota2))
+        next_ws = immediate_asucc(letterword, ota1, ota2)
+        for next_w in next_ws:
+            if next_w not in next:
+                next.append(next_w)
     return results, next
 
 def main():
@@ -371,24 +363,6 @@ def main():
     print("--------------------B----------------------")
     B,_ = buildOTA(paras[2], 'q')
     B.show()
-    print("--------------------immediate_asucc------------------------")
-    L1 = Location("1", True, False, 's')
-    Q1 = Location("1", True, False, 'q')
-    w0 = [[Letter(L1, Constraint("[0,0]")), Letter(Q1, Constraint("[0,0]"))]]
-    wsucc1, next1 = compute_wsucc(w0, max_time_value, A, B)
-    for letterword in wsucc1:
-        print(letterword)
-    print()
-    for letterword in next1:
-        print(letterword)
-    print()
-    w1 = next1[0]
-    wsucc2, next2 = compute_wsucc(w1, max_time_value, A, B)
-    for letterword in wsucc2:
-        print(letterword)
-    print()
-    for letterword in next2:
-        print(letterword)
 
 if __name__ == '__main__':
 	main()

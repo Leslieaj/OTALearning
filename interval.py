@@ -128,6 +128,9 @@ class Constraint:
             return True
         else:
             return False
+            
+    def __hash__(self):
+        return hash(("CONSTRAINT", self.min_value, self.closed_min, self.max_value, self.closed_max))
 
     def __add__(self, constraint):
         if self.isEmpty() == True or constraint.isEmpty() == True:

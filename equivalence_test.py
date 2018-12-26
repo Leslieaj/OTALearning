@@ -14,6 +14,11 @@ s5 = State(L2, 1.0)
 q1 = State(L3, 0.8)
 q2 = State(L3, 1.3)
 
+
+Ac = [s1,s2,s3,s4,s5]
+Bstate = q2
+Ac2 = [s1,s2,s4]
+
 A, _ = buildOTA('a.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 max_time_value = AA.max_time_value()
@@ -25,6 +30,7 @@ letter3 = state_to_letter(s3, max_time_value)  # s_1,(1,2)
 letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 
 B, _ = buildOTA('b.json', 'q')
+
 
 
 class EquivalenceTest(unittest.TestCase):
@@ -54,26 +60,37 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(letter5.show(), "s_2,[1,1]")
 
     def testABConfiguration(self):
-        Ac = [s1,s2,s3,s4,s5]
-        Bstate = q2
         ABConfig = ABConfiguration(Ac, Bstate)
         letterword = ABConfig.configuration_to_letterword(max_time_value)
         res = [
-            [Letter(L1, "[0,0]"), Letter(L2, "[1,1]")],
-            [Letter(L1, "(1,2)")],
-            [Letter(L1, "(0,1)"), Letter(L3, "(1,2)")],
-            [Letter(L2, "(0,1)")],
+            {Letter(L1, "[0,0]"), Letter(L2, "[1,1]")},
+            {Letter(L1, "(1,2)")},
+            {Letter(L1, "(0,1)"), Letter(L3, "(1,2)")},
+            {Letter(L2, "(0,1)")},
         ]
         self.assertEqual(letterword, res)
 
     def testLetterSubset(self):
         test_data = [
-            ([letter1, letter5], [letter3], False),
-            ([letter5, letter1], [letter1, letter5], True),
-            ([letter1], [letter1, letter5], True),
+            ({letter1, letter5}, {letter3}, False),
+            ({letter5, letter1}, {letter1, letter5}, True),
+            ({letter1}, {letter1, letter5}, True),
         ]
         for l1, l2, res in test_data:
-            self.assertEqual(is_letters_subset(l1, l2), res)
+            self.assertEqual(l1.issubset(l2), res)
+
+    def testLetterwordDominated(self):
+        ABConfig = ABConfiguration(Ac, Bstate)
+        letterword = ABConfig.configuration_to_letterword(max_time_value)
+        ABConfig2 = ABConfiguration(Ac2, Bstate)
+        letterword2 = ABConfig2.configuration_to_letterword(max_time_value)
+        res = [
+            {Letter(L1, "[0,0]")},
+            {Letter(L1, "(0,1)"), Letter(L3, "(1,2)")},
+            {Letter(L2, "(0,1)")},
+        ]
+        self.assertEqual(letterword2, res)
+        self.assertEqual(letterword_dominated(letterword2,letterword), True)
 
     def testNextRegion(self):
         test_data = [
@@ -91,20 +108,20 @@ class EquivalenceTest(unittest.TestCase):
         L3 = A.findlocationbyname("3")
         Q1 = B.findlocationbyname("1")
         Q2 = B.findlocationbyname("2")
-        w0 = [[Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")]]
+        w0 = [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}]
         wsucc1, next1 = compute_wsucc(w0, max_time_value, A, B)
         res1 = [
-            [[Letter(Q2,'[0,0]')], [Letter(L2,'(1,2)')]],
-            [[Letter(L2,'[2,2]'), Letter(Q2,'[0,0]')]],
-            [[Letter(Q2,'[0,0]')], [Letter(L2,'(2,3)')]],
+            [{Letter(Q2,'[0,0]')}, {Letter(L2,'(1,2)')}],
+            [{Letter(L2,'[2,2]'), Letter(Q2,'[0,0]')}],
+            [{Letter(Q2,'[0,0]')}, {Letter(L2,'(2,3)')}],
         ]
         self.assertEqual(next1, res1)
         
         w1 = next1[0]
         wsucc2, next2 = compute_wsucc(w1, max_time_value, A, B)
         res2 = [
-            [[Letter(L3,'[0,0]'), Letter(Q1,'[0,0]')]],
-            [[Letter(L3,'[0,0]'), Letter(Q1,'[0,0]')]],
+            [{Letter(L3,'[0,0]'), Letter(Q1,'[0,0]')}],
+            #[{Letter(L3,'[0,0]'), Letter(Q1,'[0,0]')}],
         ]
         self.assertEqual(next2, res2)
         
