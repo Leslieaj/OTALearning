@@ -144,22 +144,23 @@ def immediate_letter_asucc(letter, action, ota):
                 return Letter(succ_location, region)
     return None
 
-def immediate_asucc(letterword, ota1, ota2):
-    """ "ota1" for A, "ota2" for B.
+def immediate_asucc(letterword, A, B):
+    """ Perform the immediate 'a' action.
+        in case of L(B) is a subset of L(A).
     """
     results = []
     if len(letterword) == 1:
         letter1, letter2 = list(letterword[0])
-        for action in ota2.sigma:
+        for action in B.sigma:
             B_letter = None
             A_letter = None
             w = None
-            if letter1.location.flag == ota1.locations[0].flag:
-                B_letter = immediate_letter_asucc(letter2, action, ota2)
-                A_letter = immediate_letter_asucc(letter1, action, ota1)
+            if letter1.location.flag == A.locations[0].flag:
+                B_letter = immediate_letter_asucc(letter2, action, B)
+                A_letter = immediate_letter_asucc(letter1, action, A)
             else:
-                B_letter = immediate_letter_asucc(letter1, action, ota2)
-                A_letter = immediate_letter_asucc(letter2, action, ota1)
+                B_letter = immediate_letter_asucc(letter1, action, B)
+                A_letter = immediate_letter_asucc(letter2, action, A)
             if B_letter is not None and A_letter is not None:
                 B_ispoint = B_letter.constraint.isPoint()
                 A_ispoint = A_letter.constraint.isPoint()
@@ -175,13 +176,13 @@ def immediate_asucc(letterword, ota1, ota2):
                     results.append(w)
     elif len(letterword) == 2:
         letter1, letter2 = list(letterword[0])[0], list(letterword[1])[0]
-        for action in ota2.sigma:
+        for action in B.sigma:
             B_letter = None
             A_letter = None
             w = None
-            if letter1.location.flag == ota1.locations[0].flag:
-                B_letter = immediate_letter_asucc(letter2, action, ota2)
-                A_letter = immediate_letter_asucc(letter1, action, ota1)
+            if letter1.location.flag == A.locations[0].flag:
+                B_letter = immediate_letter_asucc(letter2, action, B)
+                A_letter = immediate_letter_asucc(letter1, action, A)
                 if B_letter is not None and A_letter is not None:
                     B_ispoint = B_letter.constraint.isPoint()
                     A_ispoint = A_letter.constraint.isPoint()
@@ -196,8 +197,8 @@ def immediate_asucc(letterword, ota1, ota2):
                     if w not in results:
                         results.append(w)
             else:
-                B_letter = immediate_letter_asucc(letter1, action, ota2)
-                A_letter = immediate_letter_asucc(letter2, action, ota1)
+                B_letter = immediate_letter_asucc(letter1, action, B)
+                A_letter = immediate_letter_asucc(letter2, action, A)
                 if B_letter is not None and A_letter is not None:
                     B_ispoint = B_letter.constraint.isPoint()
                     A_ispoint = A_letter.constraint.isPoint()
@@ -211,6 +212,8 @@ def immediate_asucc(letterword, ota1, ota2):
                         w = [{B_letter}, {A_letter}]
                     if w not in results:
                         results.append(w)
+    else:
+        raise NotImplementedError()
     return results
 
 def letterword_to_configuration(letterword, flag):
@@ -243,7 +246,7 @@ def next_region(region, max_time_value):
         else:
             return Constraint('[' + region.max_value + ',' + region.max_value + ']')
 
-def compute_wsucc(letterword, max_time_value, ota1, ota2):
+def compute_wsucc(letterword, max_time_value, A, B):
     """Compute the Succ of letterword.
     """
     # First compute all possible time delay
@@ -278,11 +281,46 @@ def compute_wsucc(letterword, max_time_value, ota1, ota2):
     # Next, perform the immediate 'a' transition
     next = []
     for letterword in results:
-        next_ws = immediate_asucc(letterword, ota1, ota2)
+        next_ws = immediate_asucc(letterword, A, B)
         for next_w in next_ws:
             if next_w not in next:
                 next.append(next_w)
     return results, next
+
+def is_bad_letterword(letterword, A, B):
+    """Determin whether a letterword is bad.
+       in case of L(B) is a subset of L(A)
+    """
+    letter1 = None
+    letter2 = None
+    if len(letterword) == 1:
+        letter1, letter2 = list(letterword[0])
+    elif len(letterword) == 2:
+        letter1, letter2 = list(letterword[0])[0], list(letterword[1])[0]
+    else:
+        raise NotImplementedError()
+    location1 = letter1.location
+    location2 = letter2.location
+    if location1.flag == B.locations[0].flag:
+        if location1.name in B.accept_names and location2.name not in A.accept_names:
+            return True
+        else:
+            return False
+    else:
+        if location2.name in B.accept_names and location1.name not in A.accept_names:
+            return True
+        else:
+            return False
+
+def ota_inclusion(A, B):
+    """Determin whether L(B) is a subset of L(A).
+    """
+    A_init_name = A.initstate_name
+    B_init_name = B.initstate_name
+    L1 = A.findlocationbyname(A_init_name)
+    Q1 = B.findlocationbyname(B_init_name)
+    w0 = [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}]
+    return w0
 
 def main():
     L1 = Location("1", True, False, 's')

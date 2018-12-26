@@ -4,15 +4,18 @@ from equivalence import *
 
 L1 = Location("1", True, False, 's')
 L2 = Location("2", False, False, 's')
-L3 = Location("3", False, True, 'q')
+L3 = Location("3", False, True, 's')
+Q1 = Location("1", True, False, 'q')
+Q2 = Location("2", False, True, 'q')
+Q3 = Location("3", False, True, 'q')
 
 s1 = State(L1, 0.0)
 s2 = State(L1, 0.3)
 s3 = State(L1, 1.2)
 s4 = State(L2, 0.4)
 s5 = State(L2, 1.0)
-q1 = State(L3, 0.8)
-q2 = State(L3, 1.3)
+q1 = State(Q3, 0.8)
+q2 = State(Q3, 1.3)
 
 
 Ac = [s1,s2,s3,s4,s5]
@@ -38,7 +41,7 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(L1.show(), "s_1,True,False")
         self.assertEqual(L1.get_name(), "1")
         self.assertEqual(L2.show(), "s_2,False,False")
-        self.assertEqual(L3.show(), "q_3,False,True")
+        self.assertEqual(Q3.show(), "q_3,False,True")
 
     def testState(self):
         self.assertEqual(s1.show(), "(s_1,0.0)")
@@ -65,7 +68,7 @@ class EquivalenceTest(unittest.TestCase):
         res = [
             {Letter(L1, "[0,0]"), Letter(L2, "[1,1]")},
             {Letter(L1, "(1,2)")},
-            {Letter(L1, "(0,1)"), Letter(L3, "(1,2)")},
+            {Letter(L1, "(0,1)"), Letter(Q3, "(1,2)")},
             {Letter(L2, "(0,1)")},
         ]
         self.assertEqual(letterword, res)
@@ -86,7 +89,7 @@ class EquivalenceTest(unittest.TestCase):
         letterword2 = ABConfig2.configuration_to_letterword(max_time_value)
         res = [
             {Letter(L1, "[0,0]")},
-            {Letter(L1, "(0,1)"), Letter(L3, "(1,2)")},
+            {Letter(L1, "(0,1)"), Letter(Q3, "(1,2)")},
             {Letter(L2, "(0,1)")},
         ]
         self.assertEqual(letterword2, res)
@@ -132,7 +135,21 @@ class EquivalenceTest(unittest.TestCase):
         w3 = next1[2]
         wsucc4, next4 = compute_wsucc(w3, max_time_value, A, B)
         self.assertEqual(next4, [])
+        
+    def testIsBadLetterword(self):
+        letterword1 = [{Letter(L1, '(1,2)'), Letter(Q1, '(3,4)')}]
+        letterword2 = [{Letter(Q2, '[0,0]')}, {Letter(L2, '(2,3)')}]
+        letterword3 = [{Letter(L3, '[0,0]')}, {Letter(Q1, '(1,2)')}]
+        letterword4 = [{Letter(L3, '[0,0]'), Letter(Q2, '[0,0]')}]
+        self.assertEqual(is_bad_letterword(letterword1, A, B), False)
+        self.assertEqual(is_bad_letterword(letterword2, A, B), True)
+        self.assertEqual(is_bad_letterword(letterword3, A, B), False)
+        self.assertEqual(is_bad_letterword(letterword4, A, B), False)
 
+    def testOTAInclusion(self):
+        L1 = A.findlocationbyname("1")
+        Q1 = B.findlocationbyname("1")
+        self.assertEqual(ota_inclusion(B, A), [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}])
 
 if __name__ == "__main__":
     unittest.main()
