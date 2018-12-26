@@ -1,5 +1,6 @@
 import unittest
-
+import sys
+sys.path.append('../')
 from equivalence import *
 
 L1 = Location("1", True, False, 's')
@@ -22,7 +23,7 @@ Ac = [s1,s2,s3,s4,s5]
 Bstate = q2
 Ac2 = [s1,s2,s4]
 
-A, _ = buildOTA('a.json', 's')
+A, _ = buildOTA('../a.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 max_time_value = AA.max_time_value()
 regions = get_regions(max_time_value)
@@ -32,7 +33,7 @@ letter2 = state_to_letter(s2, max_time_value)  # s_1,(0,1)
 letter3 = state_to_letter(s3, max_time_value)  # s_1,(1,2)
 letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 
-B, _ = buildOTA('b.json', 'q')
+B, _ = buildOTA('../b.json', 'q')
 
 
 
