@@ -47,6 +47,8 @@ class Letter(object):
     """
     def __init__(self, location, constraint):
         self.location = location
+        if isinstance(constraint, str):
+            constraint = Constraint(constraint)
         self.constraint = constraint
     
     def __eq__(self, letter):
@@ -147,7 +149,7 @@ def immediate_letter_asucc(letter, action, ota):
     region = letter.constraint
     succ_location = None
     for tran in ota.trans:
-        if tran.source == location_name and action = tran.label and region.issubset(tran.constraints[0]):
+        if tran.source == location_name and action == tran.label and region.issubset(tran.constraints[0]):
             succ_location_name = tran.target
             succ_location = ota.findlocationbyname(succ_location_name)
             if tran.reset == True:
@@ -156,15 +158,41 @@ def immediate_letter_asucc(letter, action, ota):
                 return Letter(succ_location, region)
     return None
 
-def immediate_asucc(letterword, action, ota1, ota2):
-    """
+def immediate_asucc(letterword, ota1, ota2):
+    """ "ota1" for A, "ota2" for B.
     """
     results = []
     if len(letterword) == 1:
         letter1, letter2 = letterword[0][0], letterword[0][1]
-        if letter1.location.flag == ota1.locations[0].flag:
-            for action in ota2.sigma:
-                w = None
+        for action in ota2.sigma:
+            B_letter = None
+            A_letter = None
+            w = None
+            if letter1.location.flag == ota1.locations[0].flag:
+                B_letter = immediate_letter_asucc(letter2, action, ota2)
+                A_letter = immediate_letter_asucc(letter1, action, ota1)
+            else:
+                B_letter = immediate_letter_asucc(letter1, action, ota2)
+                A_letter = immediate_letter_asucc(letter2, action, ota1)
+            if B_letter is not None and A_letter is not None:
+                B_ispoint = B_letter.constraint.isPoint()
+                A_ispoint = A_letter.constraint.isPoint()
+                if A_ispoint == True and B_ispoint == True:
+                    w = [[A_letter, B_letter]]
+                elif A_ispoint == True and B_ispoint == False:
+                    w = [[A_letter], [B_letter]]
+                elif A_ispoint == False and B_ispoint == True:
+                    w = [[B_letter], [A_letter]]
+                else:
+                    w = [[A_letter, B_letter]]
+                results.append(w)
+    elif len(letterword) == 2:
+        letter1, letter2 = letterword[0][0], letterword[1][0]
+        for action in ota2.sigma:
+            B_letter = None
+            A_letter = None
+            w = None
+            if letter1.location.flag == ota1.locations[0].flag:
                 B_letter = immediate_letter_asucc(letter2, action, ota2)
                 A_letter = immediate_letter_asucc(letter1, action, ota1)
                 if B_letter is not None and A_letter is not None:
@@ -177,10 +205,25 @@ def immediate_asucc(letterword, action, ota1, ota2):
                     elif A_ispoint == False and B_ispoint == True:
                         w = [[B_letter], [A_letter]]
                     else:
-                        w = [[A_letter, B_letter]]
+                        w = [[A_letter], [B_letter]]
                     results.append(w)
-        else:
-            for action in ota2.sigma
+            else:
+                B_letter = immediate_letter_asucc(letter1, action, ota2)
+                A_letter = immediate_letter_asucc(letter2, action, ota1)
+                if B_letter is not None and A_letter is not None:
+                    B_ispoint = B_letter.constraint.isPoint()
+                    A_ispoint = A_letter.constraint.isPoint()
+                    if A_ispoint == True and B_ispoint == True:
+                        w = [[A_letter, B_letter]]
+                    elif A_ispoint == True and B_ispoint == False:
+                        w = [[A_letter], [B_letter]]
+                    elif A_ispoint == False and B_ispoint == True:
+                        w = [[B_letter], [A_letter]]
+                    else:
+                        w = [[B_letter], [A_letter]]
+                    results.append(w)
+    return results
+
 def letterword_to_configuration(letterword, flag):
     """
         Transform a letterword to A/B-configuration.
@@ -211,7 +254,7 @@ def next_region(region, max_time_value):
         else:
             return Constraint('[' + region.max_value + ',' + region.max_value + ']')
 
-def compute_wsucc(letterword, max_time_value):
+def compute_wsucc(letterword, max_time_value, ota1, ota2):
     """Compute the Succ of letterword.
     """
     # First compute all possible time delay
@@ -244,16 +287,15 @@ def compute_wsucc(letterword, max_time_value):
         raise NotImplementedError()
 
     # Next, perform the immediate 'a' transition
-    return results
+    next = []
+    for letterword in results:
+        next.extend(immediate_asucc(letterword, ota1, ota2))
+    return results, next
 
 def main():
     L1 = Location("1", True, False, 's')
     L2 = Location("2", False, False, 's')
     L3 = Location("3", False, True, 'q')
-    print(L1.show())
-    print(type(L1.get_name()))
-    print(L2.show())
-    print(L3.show())
     s1 = State(L1, 0.0)
     s2 = State(L1, 0.3)
     s3 = State(L1, 1.2)
@@ -261,10 +303,9 @@ def main():
     s5 = State(L2, 1.0)
     q1 = State(L3, 0.8)
     q2 = State(L3, 1.3)
-    print(s1.show())
-    print(s2.show())
     print("---------------A------------------")
     paras = sys.argv
+    print(paras[1])
     A,_ = buildOTA(paras[1], 's')
     A.show()
     print("------------------Assist-----------------")
@@ -272,7 +313,6 @@ def main():
     AA.show()
     print("--------------max value---------------------")
     max_time_value = AA.max_time_value()
-    print(max_time_value)
     print("--------------all regions---------------------")
     regions = get_regions(max_time_value)
     for r in regions:
@@ -282,8 +322,6 @@ def main():
     letter2 = state_to_letter(s2, max_time_value)
     letter3 = state_to_letter(s3, max_time_value)
     letter5 = state_to_letter(s5, max_time_value)
-    print(letter1.show())
-    print(letter2.show())
     print("---------------AB-configuration------------------")
     Ac = [s1,s2,s3,s4,s5]
     Bstate = q2
@@ -296,9 +334,6 @@ def main():
     letters2 = letterword[1]
     letters3 = [letter5, letter1]
     letters4 = [letter1]
-    print(is_letters_subset(letters1, letters2))
-    print(is_letters_subset(letters3, letters1))
-    print(is_letters_subset(letters4, letters1))
     print("----------------------dominated----------------------")
     Ac2 = [s1,s2,s4]
     ABConfig2 = ABConfiguration(Ac2, Bstate)
@@ -312,10 +347,7 @@ def main():
     print([state.show() for state in ABConfig3.Aconfig])
     print(ABConfig3.Bstate.show())
     print("----------------next_region---------------------------")
-    print(next_region(regions[2], max_time_value))
-    print(next_region(regions[8], max_time_value))
-    print(next_region(regions[9], max_time_value))
-    print(next_region(regions[5], max_time_value))
+    """
     print("----------------compute_wsucc----------------------")
     w = [[Letter(L1, regions[0]), Letter(L2, regions[2])]]
     wsucc = compute_wsucc(w, max_time_value)
@@ -335,8 +367,28 @@ def main():
     wsucc = compute_wsucc(w, max_time_value)
     for letterword in wsucc:
         print(letterword)
-    
-    
-    
+    """
+    print("--------------------B----------------------")
+    B,_ = buildOTA(paras[2], 'q')
+    B.show()
+    print("--------------------immediate_asucc------------------------")
+    L1 = Location("1", True, False, 's')
+    Q1 = Location("1", True, False, 'q')
+    w0 = [[Letter(L1, Constraint("[0,0]")), Letter(Q1, Constraint("[0,0]"))]]
+    wsucc1, next1 = compute_wsucc(w0, max_time_value, A, B)
+    for letterword in wsucc1:
+        print(letterword)
+    print()
+    for letterword in next1:
+        print(letterword)
+    print()
+    w1 = next1[0]
+    wsucc2, next2 = compute_wsucc(w1, max_time_value, A, B)
+    for letterword in wsucc2:
+        print(letterword)
+    print()
+    for letterword in next2:
+        print(letterword)
+
 if __name__ == '__main__':
 	main()

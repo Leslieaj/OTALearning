@@ -160,7 +160,7 @@ def buildOTA(jsonfile, otaflag):
     trans_set = data["tran"]
     initstate = data["init"]
     accept_list = [l for l in data["accept"]]
-    L = [Location(location) for location in locations_list]
+    L = [Location(location, False, False, otaflag) for location in locations_list]
     for l in L:
         if l.name == initstate:
             l.init = True
