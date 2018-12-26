@@ -44,6 +44,8 @@ class BracketNum:
                 return False
             else:
                 return True
+        if bn.value == '+':
+            return False
         if int(self.value) > int(bn.value):
             return True
         elif int(self.value) < int(bn.value):
@@ -193,6 +195,7 @@ class Constraint:
                 return False
         else:
             return False
+
     def isPoint(self):
         if self.min_value == '+' or self.max_value == '+':
             return False
@@ -201,6 +204,15 @@ class Constraint:
         else:
             return False
 
+    def issubset(self, c2):
+        min_bn1 = self.min_bn
+        max_bn1 = self.max_bn
+        min_bn2 = c2.min_bn
+        max_bn2 = c2.max_bn
+        if min_bn1 >= min_bn2 and max_bn1 <= max_bn2:
+            return True
+        else:
+            return False
     def get_min(self):
         return int(self.min_value)
     
@@ -266,6 +278,18 @@ def intersect_constraint(c1, c2):
     else:
         return Constraint("(0,0)"), False
 
+def constraint_subset(c1, c2):
+    """Determin whether c1 is a subset of c2.
+    """
+    min_bn1 = c1.min_bn
+    max_bn1 = c1.max_bn
+    min_bn2 = c2.min_bn
+    max_bn2 = c2.max_bn
+    if min_bn1 >= min_bn2 and max_bn1 <= max_bn2:
+        return True
+    else:
+        return False
+    
 def constraint_contain(c, intervals):
     intertemp = []
     for constraint in intervals:
@@ -443,6 +467,17 @@ def main():
     print(min_constraint_number(c4))
     print(min_constraints_number([c2, c5]))
     print(min_constraints_number([c3, c5]))
+    print("---------------------constraint_subset-------------")
+    print(constraint_subset(Constraint("[1,2]"), Constraint("(1,3)")))
+    print(constraint_subset(Constraint("(1,2]"), Constraint("(1,3)")))
+    print(constraint_subset(Constraint("(1,2]"), Constraint("(1,2)")))
+    print(constraint_subset(Constraint("[1,1]"), Constraint("(0,3)")))
+    print(constraint_subset(Constraint("(1,+)"), Constraint("(1,2)")))
+    print(constraint_subset(Constraint("(2,4)"), Constraint("(1,4)")))
+    print("-----------------issubset-----------------------")
+    print(Constraint("[1,2]").issubset(Constraint("(1,3)")))
+    print(Constraint("(1,2]").issubset(Constraint("(1,3)")))
+    print(Constraint("(1,+)").issubset(Constraint("(1,2)")))
 
 if __name__=='__main__':
 	main()

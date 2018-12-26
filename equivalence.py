@@ -140,21 +140,47 @@ def letterword_dominated(lw1, lw2):
     else:
         return False
 
-def letterword_succ(letterword, ota1, ota2):
+def immediate_letter_asucc(letter, action, ota):
     """
     """
-    results = compute_wsucc(letterword, ota1.max_time_value())
-    ABconfig = letterword_to_configuration(letterword)
-    Bstate = ABconfig.Bstate
-    for tran in ota2.trans:
-        if tran.source == Bstate.location.name:    
-            action = tran.label
-            tran_constraint = tran.constraints[0]
-            #for letterword in results:
-                
-            #intersect_constraint(tran_constraint, )
-    return 0
+    location_name = letter.location.name
+    region = letter.constraint
+    succ_location = None
+    for tran in ota.trans:
+        if tran.source == location_name and action = tran.label and region.issubset(tran.constraints[0]):
+            succ_location_name = tran.target
+            succ_location = ota.findlocationbyname(succ_location_name)
+            if tran.reset == True:
+                region = Constraint("[0,0]")
+            if succ_location is not None:
+                return Letter(succ_location, region)
+    return None
 
+def immediate_asucc(letterword, action, ota1, ota2):
+    """
+    """
+    results = []
+    if len(letterword) == 1:
+        letter1, letter2 = letterword[0][0], letterword[0][1]
+        if letter1.location.flag == ota1.locations[0].flag:
+            for action in ota2.sigma:
+                w = None
+                B_letter = immediate_letter_asucc(letter2, action, ota2)
+                A_letter = immediate_letter_asucc(letter1, action, ota1)
+                if B_letter is not None and A_letter is not None:
+                    B_ispoint = B_letter.constraint.isPoint()
+                    A_ispoint = A_letter.constraint.isPoint()
+                    if A_ispoint == True and B_ispoint == True:
+                        w = [[A_letter, B_letter]]
+                    elif A_ispoint == True and B_ispoint == False:
+                        w = [[A_letter], [B_letter]]
+                    elif A_ispoint == False and B_ispoint == True:
+                        w = [[B_letter], [A_letter]]
+                    else:
+                        w = [[A_letter, B_letter]]
+                    results.append(w)
+        else:
+            for action in ota2.sigma
 def letterword_to_configuration(letterword, flag):
     """
         Transform a letterword to A/B-configuration.
@@ -188,6 +214,7 @@ def next_region(region, max_time_value):
 def compute_wsucc(letterword, max_time_value):
     """Compute the Succ of letterword.
     """
+    # First compute all possible time delay
     results = []
     if len(letterword) == 1:
         result = letterword[0]
@@ -216,8 +243,9 @@ def compute_wsucc(letterword, max_time_value):
     else:
         raise NotImplementedError()
 
+    # Next, perform the immediate 'a' transition
     return results
-            
+
 def main():
     L1 = Location("1", True, False, 's')
     L2 = Location("2", False, False, 's')

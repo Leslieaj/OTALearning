@@ -124,6 +124,12 @@ class OTA(object):
                 #else:
                     #pass
         return max_time_value
+    
+    def findlocationbyname(self, lname):
+        for l in self.locations:
+            if l.name == lname:
+                return l
+        return None
 
     def show(self):
         print("OTA name: ")
