@@ -3,7 +3,7 @@
 import sys
 from ota import *
 import copy
-from queue import Queue
+#from queue import Queue
 
 def get_regions(max_time_value):
     """
@@ -321,13 +321,13 @@ def is_bad_letterword(letterword, A, B):
         else:
             return False
 
-def explored_undominated(explored, w):
+def explored_dominated(explored, w):
     if len(explored) == 0:
         return False
     for v in explored:
         if letterword_dominated(v, w):
-            return False
-    return True
+            return True
+    return False
 
 def ota_inclusion(max_time_value, A, B):
     """Determin whether L(B) is a subset of L(A).
@@ -347,7 +347,7 @@ def ota_inclusion(max_time_value, A, B):
         del to_explore[0]
         if is_bad_letterword(w, A, B):
             return False
-        while explored_undominated(explored, w):
+        while explored_dominated(explored, w):
             if len(to_explore) == 0:
                 return True
             w = to_explore[0]
@@ -366,12 +366,15 @@ def main():
     #print("---------------A------------------")
     paras = sys.argv
     #print(paras[1])
-    A,_ = buildOTA(paras[1], 's')
+    A,_ = buildOTA('a.json', 's')
     A.show()
-    D, _ = buildOTA(paras[2], 'q')
+    AA = buildAssistantOTA(A, 's')
+    D, _ = buildOTA('d.json', 'q')
     D.show()
+    DD = buildAssistantOTA(D, 'q')
     print("-----------------------------------------")
-    ota_inclusion(4, D, A)
+    print(ota_inclusion(4, DD, AA))
+    print(ota_inclusion(4, AA, DD))
     """
     print("------------------Assist-----------------")
     AA = buildAssistantOTA(A, 's')

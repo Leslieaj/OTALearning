@@ -6,9 +6,11 @@ from equivalence import *
 L1 = Location("1", True, False, 's')
 L2 = Location("2", False, False, 's')
 L3 = Location("3", False, True, 's')
+L4 = Location("4", False, False, 's')
 Q1 = Location("1", True, False, 'q')
 Q2 = Location("2", False, True, 'q')
 Q3 = Location("3", False, True, 'q')
+Q4 = Location("4", False, False, 'q')
 
 s1 = State(L1, 0.0)
 s2 = State(L1, 0.3)
@@ -34,7 +36,9 @@ letter3 = state_to_letter(s3, max_time_value)  # s_1,(1,2)
 letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 
 B, _ = buildOTA('../b.json', 'q')
+BB = buildAssistantOTA(B, 'q')
 C, _ = buildOTA('../c.json', 'q')
+CC = buildAssistantOTA(C, 'q')
 D, _ = buildOTA('../d.json', 'q')
 DD = buildAssistantOTA(D, 'q')
 
@@ -225,27 +229,42 @@ class EquivalenceTest(unittest.TestCase):
         wsucc4, next4 = compute_wsucc(w3, max_time_value, A, B)
         self.assertEqual(next4, [])
         
-        D1 = D.findlocationbyname("1")
+        D1 = DD.findlocationbyname("1")
         w4 = [{Letter(D1, '[0,0]'), Letter(L1, '[0,0]')}]
-        wsucc4, next4 = compute_wsucc(w4, max_time_value, DD, AA)
-        for letterword in wsucc4:
-            print(letterword)
-        print()
-        for letterword in next4:
-            print(letterword)
-        print()
-        
-        w5 = next4[4]
-        print(w5)
-        wsucc5, next5 = compute_wsucc(w5, max_time_value, DD, AA)
-        for letterword in wsucc5:
-            print(letterword)
-        print()
-        for letterword in next5:
-            print(letterword)
-        print()
-        
-        print(is_bad_letterword(next5[1], DD, AA))
+        wsucc5, next5 = compute_wsucc(w4, max_time_value, DD, AA)
+        # for letterword in wsucc5:
+        #     print(letterword)
+        # print()
+        # for letterword in next5:
+        #     print(letterword)
+        # print()
+        D2 = DD.findlocationbyname("2")
+        D3 = DD.findlocationbyname("3")
+        D4 = DD.findlocationbyname("4")
+        res5 = [
+            [{Letter(L4, '[0,0]'), Letter(D4, '[0,0]')}],
+            [{Letter(L2, '[1,1]'), Letter(D2, '[1,1]')}],
+            [{Letter(L2, '(1,2)'), Letter(D2, '(1,2)')}],
+            [{Letter(L2, '[2,2]'), Letter(D4, '[0,0]')}],
+            [{Letter(D4, '[0,0]')}, {Letter(L2, '(2,3)')}],
+        ]
+        self.assertEqual(next5, res5)
+
+        w5 = next5[4]
+        # print(w5)
+        wsucc6, next6 = compute_wsucc(w5, max_time_value, DD, AA)
+        # for letterword in wsucc6:
+        #     print(letterword)
+        # print()
+        # for letterword in next6:
+        #     print(letterword)
+        # print()
+        res6 = [
+            [{Letter(D4, '[0,0]'), Letter(L4, '[0,0]')}],
+            [{Letter(L3, '[0,0]'), Letter(D4, '[0,0]')}],
+        ]
+        self.assertEqual(next6, res6)
+        #print(is_bad_letterword(next6[1], DD, AA))
         
     def testIsBadLetterword(self):
         letterword1 = [{Letter(L1, '(1,2)'), Letter(Q1, '(3,4)')}]
@@ -258,13 +277,11 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(is_bad_letterword(letterword4, A, B), False)
 
     def testOTAInclusion(self):
-        #L1 = A.findlocationbyname("1")
-        #Q1 = B.findlocationbyname("1")
-        self.assertEqual(ota_inclusion(max_time_value, A, B), False)
-        self.assertEqual(ota_inclusion(max_time_value, A, C), True)
-        self.assertEqual(ota_inclusion(max_time_value, C, A), True)
-        self.assertEqual(ota_inclusion(max_time_value, A, D), True)
+        self.assertEqual(ota_inclusion(max_time_value, AA, BB), False)
+        self.assertEqual(ota_inclusion(max_time_value, AA, CC), True)
+        self.assertEqual(ota_inclusion(max_time_value, CC, AA), True)
         self.assertEqual(ota_inclusion(max_time_value, DD, AA), False)
+        self.assertEqual(ota_inclusion(max_time_value, AA, DD), True)
 
 if __name__ == "__main__":
     unittest.main()
