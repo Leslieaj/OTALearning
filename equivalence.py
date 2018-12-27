@@ -372,7 +372,7 @@ def main():
     D, _ = buildOTA('d.json', 'q')
     D.show()
     DD = buildAssistantOTA(D, 'q')
-    print("-----------------------------------------")
+    print("----------------ota_inclusion-------------------------")
     print(ota_inclusion(4, DD, AA))
     print(ota_inclusion(4, AA, DD))
     """
