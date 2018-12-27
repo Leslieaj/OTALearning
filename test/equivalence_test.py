@@ -34,8 +34,8 @@ letter3 = state_to_letter(s3, max_time_value)  # s_1,(1,2)
 letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 
 B, _ = buildOTA('../b.json', 'q')
-
-
+C, _ = buildOTA('../c.json', 'q')
+D, _ = buildOTA('../d.json', 'q')
 
 class EquivalenceTest(unittest.TestCase):
     def testLocation(self):
@@ -235,9 +235,13 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(is_bad_letterword(letterword4, A, B), False)
 
     def testOTAInclusion(self):
-        L1 = A.findlocationbyname("1")
-        Q1 = B.findlocationbyname("1")
-        self.assertEqual(ota_inclusion(B, A), [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}])
+        #L1 = A.findlocationbyname("1")
+        #Q1 = B.findlocationbyname("1")
+        self.assertEqual(ota_inclusion(max_time_value, A, B), False)
+        self.assertEqual(ota_inclusion(max_time_value, A, C), True)
+        self.assertEqual(ota_inclusion(max_time_value, C, A), True)
+        self.assertEqual(ota_inclusion(max_time_value, A, D), True)
+        self.assertEqual(ota_inclusion(max_time_value, D, A), False)
 
 if __name__ == "__main__":
     unittest.main()

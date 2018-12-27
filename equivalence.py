@@ -3,6 +3,7 @@
 import sys
 from ota import *
 import copy
+from queue import Queue
 
 def get_regions(max_time_value):
     """
@@ -320,7 +321,15 @@ def is_bad_letterword(letterword, A, B):
         else:
             return False
 
-def ota_inclusion(A, B):
+def explored_undominated(explored, w):
+    if len(explored) == 0:
+        return False
+    for v in explored:
+        if letterword_dominated(v, w):
+            return False
+    return True
+
+def ota_inclusion(max_time_value, A, B):
     """Determin whether L(B) is a subset of L(A).
     """
     A_init_name = A.initstate_name
@@ -328,24 +337,42 @@ def ota_inclusion(A, B):
     L1 = A.findlocationbyname(A_init_name)
     Q1 = B.findlocationbyname(B_init_name)
     w0 = [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}]
-    return w0
+    to_explore = []
+    to_explore.append(w0)
+    explored = []
+    while True:
+        if len(to_explore) == 0:
+            return True
+        w = to_explore[0]
+        del to_explore[0]
+        if is_bad_letterword(w, A, B):
+            return False
+        while explored_undominated(explored, w):
+            if len(to_explore) == 0:
+                return True
+            w = to_explore[0]
+            del to_explore[0]
+            if is_bad_letterword(w, A, B):
+                return False
+        wsucc, next = compute_wsucc(w, max_time_value, A, B)
+        for nw in next:
+            if nw not in to_explore:
+                to_explore.append(nw)
+        if w not in explored:
+            explored.append(w)
+    #return w0
 
 def main():
-    L1 = Location("1", True, False, 's')
-    L2 = Location("2", False, False, 's')
-    L3 = Location("3", False, True, 'q')
-    s1 = State(L1, 0.0)
-    s2 = State(L1, 0.3)
-    s3 = State(L1, 1.2)
-    s4 = State(L2, 0.4)
-    s5 = State(L2, 1.0)
-    q1 = State(L3, 0.8)
-    q2 = State(L3, 1.3)
-    print("---------------A------------------")
+    #print("---------------A------------------")
     paras = sys.argv
-    print(paras[1])
+    #print(paras[1])
     A,_ = buildOTA(paras[1], 's')
     A.show()
+    D, _ = buildOTA(paras[2], 'q')
+    D.show()
+    print("-----------------------------------------")
+    ota_inclusion(4, D, A)
+    """
     print("------------------Assist-----------------")
     AA = buildAssistantOTA(A, 's')
     AA.show()
@@ -386,6 +413,7 @@ def main():
     print(ABConfig3.Bstate.show())
     print("----------------next_region---------------------------")
     """
+    """
     print("----------------compute_wsucc----------------------")
     w = [[Letter(L1, regions[0]), Letter(L2, regions[2])]]
     wsucc = compute_wsucc(w, max_time_value)
@@ -406,9 +434,9 @@ def main():
     for letterword in wsucc:
         print(letterword)
     """
-    print("--------------------B----------------------")
-    B,_ = buildOTA(paras[2], 'q')
-    B.show()
+    #print("--------------------B----------------------")
+    #B,_ = buildOTA(paras[2], 'q')
+    #B.show()
 
 if __name__ == '__main__':
 	main()
