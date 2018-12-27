@@ -242,7 +242,7 @@ def next_region(region, max_time_value):
             return Constraint('(' + region.max_value + ',' + str(int(region.max_value) + 1) + ')')
     else:
         if region.max_value == '+':
-            return None
+            return Constraint('(' + region.min_value + ',' + '+' + ')')
         else:
             return Constraint('[' + region.max_value + ',' + region.max_value + ']')
 
@@ -251,20 +251,23 @@ def compute_wsucc(letterword, max_time_value, A, B):
     """
     # First compute all possible time delay
     results = []
+    last_region = Constraint('(' + str(max_time_value) + ',' + '+' + ')')
     if len(letterword) == 1:
         result = letterword[0]
-        while all(letter.constraint is not None for letter in result):
+        while any(letter.constraint != last_region for letter in result):
             results.append([result])
             new_result = set()
             for letter in result:
                 new_letter = Letter(letter.location, next_region(letter.constraint, max_time_value))
                 new_result.add(new_letter)
             result = new_result
+        if [result] not in results:
+            results.append([result])
     elif len(letterword) == 2:
         if len(letterword[0]) != 1 and len(letterword[1]) != 1:
             raise NotImplementedError()
         result = letterword
-        while list(result[0])[0].constraint is not None and list(result[1])[0].constraint is not None:
+        while list(result[0])[0].constraint != last_region or list(result[1])[0].constraint != last_region:
             results.append(result)
             new_result = []
             l1, l2 = list(result[0])[0], list(result[1])[0]
@@ -275,6 +278,11 @@ def compute_wsucc(letterword, max_time_value, A, B):
                 new_result.append({Letter(l2.location, next_region(l2.constraint, max_time_value))})
                 new_result.append({l1})
             result = new_result
+        if result not in results:
+            results.append(result)
+            new_result = [result[1], result[0]]
+            if new_result not in results:
+                results.append(new_result)
     else:
         raise NotImplementedError()
 

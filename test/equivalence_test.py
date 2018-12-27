@@ -100,12 +100,99 @@ class EquivalenceTest(unittest.TestCase):
         test_data = [
             (regions[2], regions[3]),
             (regions[8], regions[9]),
-            (regions[9], None),
+            (regions[9], regions[9]),
             (regions[5], regions[6]),
         ]
         for region, next in test_data:
             self.assertEqual(next_region(region, max_time_value), next)
-            
+    
+    def testComputeWsucc(self):
+        w = [{Letter(L1, regions[0]), Letter(Q1, regions[0])}]
+        wsucc,_ = compute_wsucc(w, max_time_value, A, B)
+        #for letterword in wsucc:
+            #print(letterword)
+        #print()
+        res = [
+            [{Letter(L1, '[0,0]'), Letter(Q1, '[0,0]')}],
+            [{Letter(L1, '(0,1)'), Letter(Q1, '(0,1)')}],
+            [{Letter(L1, '[1,1]'), Letter(Q1, '[1,1]')}],
+            [{Letter(L1, '(1,2)'), Letter(Q1, '(1,2)')}],
+            [{Letter(L1, '[2,2]'), Letter(Q1, '[2,2]')}],
+            [{Letter(L1, '(2,3)'), Letter(Q1, '(2,3)')}],
+            [{Letter(L1, '[3,3]'), Letter(Q1, '[3,3]')}],
+            [{Letter(L1, '(3,4)'), Letter(Q1, '(3,4)')}],
+            [{Letter(L1, '[4,4]'), Letter(Q1, '[4,4]')}],
+            [{Letter(L1, '(4,+)'), Letter(Q1, '(4,+)')}],        
+        ]
+        self.assertEqual(wsucc, res)
+        
+        w = [{Letter(L1, regions[5]), Letter(Q2, regions[9])}]
+        wsucc,_ = compute_wsucc(w, max_time_value, A, B)
+        #for letterword in wsucc:
+            #print(letterword)
+        #print()
+        res = [
+            [{Letter(L1, '(2,3)'), Letter(Q2, '(4,+)')}],
+            [{Letter(L1, '[3,3]'), Letter(Q2, '(4,+)')}],
+            [{Letter(L1, '(3,4)'), Letter(Q2, '(4,+)')}],
+            [{Letter(L1, '[4,4]'), Letter(Q2, '(4,+)')}],
+            [{Letter(L1, '(4,+)'), Letter(Q2, '(4,+)')}],
+        ]
+        self.assertEqual(wsucc, res)
+        
+        w = [{Letter(L1, regions[0])}, {Letter(Q2, regions[1])}]
+        wsucc,_ = compute_wsucc(w, max_time_value, A, B)
+        #for letterword in wsucc:
+            #print(letterword)
+        #print()
+        res = [
+            [{Letter(L1, '[0,0]')}, {Letter(Q2, '(0,1)')}],
+            [{Letter(L1, '(0,1)')}, {Letter(Q2, '(0,1)')}],
+            [{Letter(Q2, '[1,1]')}, {Letter(L1, '(0,1)')}],
+            [{Letter(Q2, '(1,2)')}, {Letter(L1, '(0,1)')}],
+            [{Letter(L1, '[1,1]')}, {Letter(Q2, '(1,2)')}],
+            [{Letter(L1, '(1,2)')}, {Letter(Q2, '(1,2)')}],
+            [{Letter(Q2, '[2,2]')}, {Letter(L1, '(1,2)')}],
+            [{Letter(Q2, '(2,3)')}, {Letter(L1, '(1,2)')}],
+            [{Letter(L1, '[2,2]')}, {Letter(Q2, '(2,3)')}],
+            [{Letter(L1, '(2,3)')}, {Letter(Q2, '(2,3)')}],
+            [{Letter(Q2, '[3,3]')}, {Letter(L1, '(2,3)')}],
+            [{Letter(Q2, '(3,4)')}, {Letter(L1, '(2,3)')}],
+            [{Letter(L1, '[3,3]')}, {Letter(Q2, '(3,4)')}],
+            [{Letter(L1, '(3,4)')}, {Letter(Q2, '(3,4)')}],
+            [{Letter(Q2, '[4,4]')}, {Letter(L1, '(3,4)')}],
+            [{Letter(Q2, '(4,+)')}, {Letter(L1, '(3,4)')}],
+            [{Letter(L1, '[4,4]')}, {Letter(Q2, '(4,+)')}],
+            [{Letter(L1, '(4,+)')}, {Letter(Q2, '(4,+)')}],
+            [{Letter(Q2, '(4,+)')}, {Letter(L1, '(4,+)')}],
+        ]
+        self.assertEqual(wsucc, res)
+        
+        w = [{Letter(L1, regions[1])}, {Letter(Q3, regions[5])}]
+        wsucc,_ = compute_wsucc(w, max_time_value, A, B)
+        #for letterword in wsucc:
+            #print(letterword)
+        #print()
+        res = [
+            [{Letter(L1, '(0,1)')}, {Letter(Q3, '(2,3)')}],
+            [{Letter(Q3, '[3,3]')}, {Letter(L1, '(0,1)')}],
+            [{Letter(Q3, '(3,4)')}, {Letter(L1, '(0,1)')}],
+            [{Letter(L1, '[1,1]')}, {Letter(Q3, '(3,4)')}],
+            [{Letter(L1, '(1,2)')}, {Letter(Q3, '(3,4)')}],
+            [{Letter(Q3, '[4,4]')}, {Letter(L1, '(1,2)')}],
+            [{Letter(Q3, '(4,+)')}, {Letter(L1, '(1,2)')}],
+            [{Letter(L1, '[2,2]')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(L1, '(2,3)')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(Q3, '(4,+)')}, {Letter(L1, '(2,3)')}],
+            [{Letter(L1, '[3,3]')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(L1, '(3,4)')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(Q3, '(4,+)')}, {Letter(L1, '(3,4)')}],
+            [{Letter(L1, '[4,4]')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(L1, '(4,+)')}, {Letter(Q3, '(4,+)')}],
+            [{Letter(Q3, '(4,+)')}, {Letter(L1, '(4,+)')}],
+        ]
+        self.assertEqual(wsucc, res)
+
     def testImmediateASucc(self):
         L1 = A.findlocationbyname("1")
         L2 = A.findlocationbyname("2")
