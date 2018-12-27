@@ -36,6 +36,7 @@ letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 B, _ = buildOTA('../b.json', 'q')
 C, _ = buildOTA('../c.json', 'q')
 D, _ = buildOTA('../d.json', 'q')
+DD = buildAssistantOTA(D, 'q')
 
 class EquivalenceTest(unittest.TestCase):
     def testLocation(self):
@@ -224,6 +225,28 @@ class EquivalenceTest(unittest.TestCase):
         wsucc4, next4 = compute_wsucc(w3, max_time_value, A, B)
         self.assertEqual(next4, [])
         
+        D1 = D.findlocationbyname("1")
+        w4 = [{Letter(D1, '[0,0]'), Letter(L1, '[0,0]')}]
+        wsucc4, next4 = compute_wsucc(w4, max_time_value, DD, AA)
+        for letterword in wsucc4:
+            print(letterword)
+        print()
+        for letterword in next4:
+            print(letterword)
+        print()
+        
+        w5 = next4[4]
+        print(w5)
+        wsucc5, next5 = compute_wsucc(w5, max_time_value, DD, AA)
+        for letterword in wsucc5:
+            print(letterword)
+        print()
+        for letterword in next5:
+            print(letterword)
+        print()
+        
+        print(is_bad_letterword(next5[1], DD, AA))
+        
     def testIsBadLetterword(self):
         letterword1 = [{Letter(L1, '(1,2)'), Letter(Q1, '(3,4)')}]
         letterword2 = [{Letter(Q2, '[0,0]')}, {Letter(L2, '(2,3)')}]
@@ -241,7 +264,7 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(ota_inclusion(max_time_value, A, C), True)
         self.assertEqual(ota_inclusion(max_time_value, C, A), True)
         self.assertEqual(ota_inclusion(max_time_value, A, D), True)
-        self.assertEqual(ota_inclusion(max_time_value, D, A), False)
+        self.assertEqual(ota_inclusion(max_time_value, DD, AA), False)
 
 if __name__ == "__main__":
     unittest.main()
