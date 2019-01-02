@@ -82,6 +82,35 @@ class Letter(object):
     def __repr__(self):
         return self.show()
 
+class Letterword(object):
+    """The definition of letterword.
+       lw for the letterword list itself
+       prelw for the pre letterword object.
+    """
+    def __init__(self, lw, prelw=None, action="DELAY"):
+        self.lw = lw or []
+        self.prelw = prelw
+        self.action = action
+
+    def __eq__(self, letterword):
+        #if self.lw == letterword.lw and self.prelw == letterword.prelw and self.action==letterword.action:
+        if self.lw == letterword.lw:
+            return True
+        else:
+            return False
+            
+    def __hash__(self):
+        return hash(("LETTERWORD", self.lw, self.prelw, self.action))
+    
+    def show(self):
+        return self.lw #, self.action
+    
+    def __str__(self):
+        return self.show()
+    
+    def __repr__(self):
+        return self.show()
+
 class ABConfiguration(object):
     """
         The definition of A/B-configuration.
@@ -115,16 +144,16 @@ def letterword_dominated(lw1, lw2):
     """
     index = 0
     flag = 0
-    for letters1 in lw1:
-        for i in range(index, len(lw2)):
-            if letters1.issubset(lw2[i]):
+    for letters1 in lw1.lw:
+        for i in range(index, len(lw2.lw)):
+            if letters1.issubset(lw2.lw[i]):
                 index = i+1
                 flag = flag + 1
                 break
             else:
                 pass
     #print(flag)
-    if flag == len(lw1):
+    if flag == len(lw1.lw):
         return True
     else:
         return False
@@ -150,8 +179,8 @@ def immediate_asucc(letterword, A, B):
         in case of L(B) is a subset of L(A).
     """
     results = []
-    if len(letterword) == 1:
-        letter1, letter2 = list(letterword[0])
+    if len(letterword.lw) == 1:
+        letter1, letter2 = list(letterword.lw[0])
         for action in B.sigma:
             B_letter = None
             A_letter = None
@@ -173,10 +202,11 @@ def immediate_asucc(letterword, A, B):
                     w = [{B_letter}, {A_letter}]
                 else:
                     w = [{A_letter, B_letter}]
-                if w not in results:
-                    results.append(w)
-    elif len(letterword) == 2:
-        letter1, letter2 = list(letterword[0])[0], list(letterword[1])[0]
+                current_lw = Letterword(w, letterword, action)
+                if current_lw not in results:
+                    results.append(current_lw)
+    elif len(letterword.lw) == 2:
+        letter1, letter2 = list(letterword.lw[0])[0], list(letterword.lw[1])[0]
         for action in B.sigma:
             B_letter = None
             A_letter = None
@@ -195,8 +225,9 @@ def immediate_asucc(letterword, A, B):
                         w = [{B_letter}, {A_letter}]
                     else:
                         w = [{A_letter}, {B_letter}]
-                    if w not in results:
-                        results.append(w)
+                    current_lw = Letterword(w, letterword, action)
+                    if current_lw not in results:
+                        results.append(current_lw)
             else:
                 B_letter = immediate_letter_asucc(letter1, action, B)
                 A_letter = immediate_letter_asucc(letter2, action, A)
@@ -211,8 +242,9 @@ def immediate_asucc(letterword, A, B):
                         w = [{B_letter}, {A_letter}]
                     else:
                         w = [{B_letter}, {A_letter}]
-                    if w not in results:
-                        results.append(w)
+                    current_lw = Letterword(w, letterword, action)
+                    if current_lw not in results:
+                        results.append(current_lw)
     else:
         raise NotImplementedError()
     return results
@@ -253,23 +285,24 @@ def compute_wsucc(letterword, max_time_value, A, B):
     # First compute all possible time delay
     results = []
     last_region = Constraint('(' + str(max_time_value) + ',' + '+' + ')')
-    if len(letterword) == 1:
-        result = letterword[0]
+    if len(letterword.lw) == 1:
+        result = letterword.lw[0]
         while any(letter.constraint != last_region for letter in result):
-            results.append([result])
+            results.append(Letterword([result], letterword))
             new_result = set()
             for letter in result:
                 new_letter = Letter(letter.location, next_region(letter.constraint, max_time_value))
                 new_result.add(new_letter)
             result = new_result
-        if [result] not in results:
-            results.append([result])
-    elif len(letterword) == 2:
-        if len(letterword[0]) != 1 and len(letterword[1]) != 1:
+        current_lw = Letterword([result], letterword)
+        if current_lw not in results:
+            results.append(current_lw)
+    elif len(letterword.lw) == 2:
+        if len(letterword.lw[0]) != 1 and len(letterword.lw[1]) != 1:
             raise NotImplementedError()
-        result = letterword
+        result = letterword.lw
         while list(result[0])[0].constraint != last_region or list(result[1])[0].constraint != last_region:
-            results.append(result)
+            results.append(Letterword(result, letterword))
             new_result = []
             l1, l2 = list(result[0])[0], list(result[1])[0]
             if l1.constraint.isPoint():
@@ -279,9 +312,10 @@ def compute_wsucc(letterword, max_time_value, A, B):
                 new_result.append({Letter(l2.location, next_region(l2.constraint, max_time_value))})
                 new_result.append({l1})
             result = new_result
-        if result not in results:
-            results.append(result)
-            new_result = [result[1], result[0]]
+        current_lw = Letterword(result, letterword)
+        if current_lw not in results:
+            results.append(current_lw)
+            new_result = Letterword([current_lw.lw[1], current_lw.lw[0]], letterword)
             if new_result not in results:
                 results.append(new_result)
     else:
@@ -338,21 +372,21 @@ def ota_inclusion(max_time_value, A, B):
     Q1 = B.findlocationbyname(B_init_name)
     w0 = [{Letter(L1, "[0,0]"), Letter(Q1, "[0,0]")}]
     to_explore = []
-    to_explore.append(w0)
+    to_explore.append(Letterword(w0,None,''))
     explored = []
     while True:
         if len(to_explore) == 0:
             return True
         w = to_explore[0]
         del to_explore[0]
-        if is_bad_letterword(w, A, B):
+        if is_bad_letterword(w.lw, A, B):
             return False
         while explored_dominated(explored, w):
             if len(to_explore) == 0:
                 return True
             w = to_explore[0]
             del to_explore[0]
-            if is_bad_letterword(w, A, B):
+            if is_bad_letterword(w.lw, A, B):
                 return False
         wsucc, next = compute_wsucc(w, max_time_value, A, B)
         for nw in next:
