@@ -157,6 +157,11 @@ class Timedword(object):
     def __init__(self, action, time):
         self.action = action
         self.time = time
+    def __eq__(self, tw):
+        if self.action == tw.action and self.time == tw.time:
+            return True
+        else:
+            return False
 
     def show(self):
         return '(' + self.action + ',' + str(self.time) + ')'

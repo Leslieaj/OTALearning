@@ -406,6 +406,7 @@ def ota_inclusion(max_time_value, A, B):
 
 def findpath(letterword, flag, sigma):
     """When get a letterword, find the path ends in the letterword.
+       Return a global timedword.
     """
     current_lw = letterword
     path = [current_lw]
@@ -413,8 +414,10 @@ def findpath(letterword, flag, sigma):
         path.insert(0, current_lw.prelw)
         current_lw = current_lw.prelw
     #return path
-    timedwords = []
+    global_timedwords = []
+    last_time = 0
     temp_time = 0
+    reset = False
     for letterword in path:
         temp_location, temp_region =  None, None
         letter1, letter2 = None, None
@@ -431,17 +434,17 @@ def findpath(letterword, flag, sigma):
             temp_location = letter2.location
             temp_region = letter2.constraint
         if letterword.action == "DELAY":
-            temp_time = temp_time + minnum_in_region(temp_region)
+            temp_time = last_time + minnum_in_region(temp_region)
         elif letterword.action in sigma:
             new_timedword = Timedword(letterword.action, temp_time)
-            timedwords.append(new_timedword)
+            global_timedwords.append(new_timedword)
             if minnum_in_region(temp_region) == 0:
-                temp_time = 0
+                last_time = temp_time
         elif letterword.action == '':
             pass
         else:
             raise NotImplementedError()
-    return path, timedwords
+    return path, global_timedwords
 
 def main():
     #print("---------------A------------------")
