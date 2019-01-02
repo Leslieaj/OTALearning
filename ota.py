@@ -225,7 +225,7 @@ def buildAssistantOTA(ota, otaflag):
     location_number = len(ota.locations)
     tran_number = len(ota.trans)
     new_location = Location(str(location_number+1), False, False, otaflag)
-    flag = False
+    #flag = False
     new_trans = []
     for l in ota.locations:
         l_dict = {}
