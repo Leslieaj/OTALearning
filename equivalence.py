@@ -445,20 +445,3 @@ def findpath(letterword, flag, sigma):
         else:
             raise NotImplementedError()
     return path, global_timedwords
-
-def main():
-    #print("---------------A------------------")
-    paras = sys.argv
-    #print(paras[1])
-    A,_ = buildOTA('a.json', 's')
-    A.show()
-    AA = buildAssistantOTA(A, 's')
-    D, _ = buildOTA('d.json', 'q')
-    D.show()
-    DD = buildAssistantOTA(D, 'q')
-    print("----------------ota_inclusion-------------------------")
-    print(ota_inclusion(4, DD, AA)[0])
-    print(ota_inclusion(4, AA, DD)[0])
-
-if __name__ == '__main__':
-	main()

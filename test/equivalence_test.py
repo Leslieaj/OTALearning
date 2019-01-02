@@ -1,3 +1,5 @@
+#unit test for equivalence.py
+
 import unittest
 import sys
 sys.path.append('../')
@@ -45,19 +47,6 @@ E, _ = buildOTA('../e.json', 'q')
 EE = buildAssistantOTA(E, 'q')
 
 class EquivalenceTest(unittest.TestCase):
-    def testLocation(self):
-        self.assertEqual(L1.show(), "s_1,True,False")
-        self.assertEqual(L1.get_name(), "1")
-        self.assertEqual(L2.show(), "s_2,False,False")
-        self.assertEqual(Q3.show(), "q_3,False,True")
-
-    def testState(self):
-        self.assertEqual(s1.show(), "(s_1,0.0)")
-        self.assertEqual(s2.show(), "(s_1,0.3)")
-
-    def testMaxTimeValue(self):
-        self.assertEqual(AA.max_time_value(), 4)
-
     def testRegions(self):
         self.assertEqual(len(regions), 10)
         self.assertEqual(regions[0].show(), "[0,0]")

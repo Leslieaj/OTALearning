@@ -72,7 +72,13 @@ class OTATran(object):
         self.reset = reset
         self.target = target
         self.flag = flag
-
+    def __eq__(self, otatran):
+        if self.source == otatran.source and self.label == otatran.label and self.constraints == otatran.constraints and self.reset == otatran.reset and self.target == otatran.target and self.flag == otatran.flag:
+            return True
+        else:
+            return False
+    def __hash__(self):
+        return hash(("OTATRAN", self.source, self.label,self.constraints[0], self.reset, self.target, self.flag))
     def show_constraints(self):
         length = len(self.constraints)
         if length ==0:
@@ -260,28 +266,16 @@ def buildAssistantOTA(ota, otaflag):
             assist_trans.append(temp_tran)
     return OTA(assist_name, ota.sigma, assist_locations, assist_trans, assist_init, assist_accepts)
 
-def main():
-    L1 = Location("1", True, False)
-    L2 = Location("2", False, False)
-    L3 = Location("3", False, True)
-    print(L1.show())
-    print(type(L1.get_name()))
-    print(L2.show())
-    print(L3.show())
-    s1 = State(L1, 1.2)
-    s2 = State(L3, 3.0)
-    print(s1.show())
-    print(s2.show())
+# def main():
+#     print("------------------A-----------------")
+#     paras = sys.argv
+#     A,_ = buildOTA(paras[1], 's')
+#     A.show()
+#     print("------------------Assist-----------------")
+#     AA = buildAssistantOTA(A, 's')
+#     AA.show()
+#     print("--------------max value---------------------")
+#     print(AA.max_time_value())
 
-    print("------------------A-----------------")
-    paras = sys.argv
-    A,_ = buildOTA(paras[1], 's')
-    A.show()
-    print("------------------Assist-----------------")
-    AA = buildAssistantOTA(A, 's')
-    AA.show()
-    print("--------------max value---------------------")
-    print(AA.max_time_value())
-
-if __name__=='__main__':
-	main()
+# if __name__=='__main__':
+# 	main()
