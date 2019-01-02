@@ -151,6 +151,22 @@ class OTA(object):
         print("accept states: ")
         print(self.accept_names)
 
+class Timedword(object):
+    """The definition of timedword without resetting information.
+    """
+    def __init__(self, action, time):
+        self.action = action
+        self.time = time
+
+    def show(self):
+        return '(' + self.action + ',' + str(self.time) + ')'
+    
+    def __str__(self):
+        return self.show()
+    
+    def __repr__(self):
+        return self.show()
+
 def buildOTA(jsonfile, otaflag):
     """
         build the teacher OTA from a json file.

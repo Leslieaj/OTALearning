@@ -26,6 +26,14 @@ def get_regions(max_time_value):
                 regions.append(r)
     return regions
 
+def minnum_in_region(constraint):
+    """Return the minimal number in the region. For [5,9], return 5; for (4,10), return 4.1 .
+    """
+    if constraint.closed_min == True:
+        return int(constraint.min_value)
+    else:
+        return float(constraint.min_value + '.1')
+
 def state_to_letter(state, max_time_value):
     region = None
     integer = int(state.v)
@@ -376,18 +384,18 @@ def ota_inclusion(max_time_value, A, B):
     explored = []
     while True:
         if len(to_explore) == 0:
-            return True
+            return True, None
         w = to_explore[0]
         del to_explore[0]
         if is_bad_letterword(w.lw, A, B):
-            return False
+            return False, w
         while explored_dominated(explored, w):
             if len(to_explore) == 0:
-                return True
+                return True, None
             w = to_explore[0]
             del to_explore[0]
             if is_bad_letterword(w.lw, A, B):
-                return False
+                return False, w
         wsucc, next = compute_wsucc(w, max_time_value, A, B)
         for nw in next:
             if nw not in to_explore:
@@ -395,6 +403,45 @@ def ota_inclusion(max_time_value, A, B):
         if w not in explored:
             explored.append(w)
     #return w0
+
+def findpath(letterword, flag, sigma):
+    """When get a letterword, find the path ends in the letterword.
+    """
+    current_lw = letterword
+    path = [current_lw]
+    while current_lw.prelw is not None:
+        path.insert(0, current_lw.prelw)
+        current_lw = current_lw.prelw
+    #return path
+    timedwords = []
+    temp_time = 0
+    for letterword in path:
+        temp_location, temp_region =  None, None
+        letter1, letter2 = None, None
+        if len(letterword.lw) == 1:
+            letter1, letter2 = list(letterword.lw[0])
+        elif len(letterword.lw) == 2:
+            letter1, letter2 = list(letterword.lw[0])[0], list(letterword.lw[1])[0]
+        else:
+            raise NotImplementedError()
+        if letter1.location.flag == flag:
+            temp_location = letter1.location
+            temp_region = letter1.constraint
+        else:
+            temp_location = letter2.location
+            temp_region = letter2.constraint
+        if letterword.action == "DELAY":
+            temp_time = temp_time + minnum_in_region(temp_region)
+        elif letterword.action in sigma:
+            new_timedword = Timedword(letterword.action, temp_time)
+            timedwords.append(new_timedword)
+            if minnum_in_region(temp_region) == 0:
+                temp_time = 0
+        elif letterword.action == '':
+            pass
+        else:
+            raise NotImplementedError()
+    return path, timedwords
 
 def main():
     #print("---------------A------------------")
@@ -407,73 +454,8 @@ def main():
     D.show()
     DD = buildAssistantOTA(D, 'q')
     print("----------------ota_inclusion-------------------------")
-    print(ota_inclusion(4, DD, AA))
-    print(ota_inclusion(4, AA, DD))
-    """
-    print("------------------Assist-----------------")
-    AA = buildAssistantOTA(A, 's')
-    AA.show()
-    print("--------------max value---------------------")
-    max_time_value = AA.max_time_value()
-    print("--------------all regions---------------------")
-    regions = get_regions(max_time_value)
-    for r in regions:
-        print(r.show())
-    print("-------------------------------------")
-    letter1 = state_to_letter(s1, max_time_value)
-    letter2 = state_to_letter(s2, max_time_value)
-    letter3 = state_to_letter(s3, max_time_value)
-    letter5 = state_to_letter(s5, max_time_value)
-    print("---------------AB-configuration------------------")
-    Ac = [s1,s2,s3,s4,s5]
-    Bstate = q2
-    ABConfig = ABConfiguration(Ac, Bstate)
-    letterword = ABConfig.configuration_to_letterword(max_time_value)
-    for letters in letterword:
-        print([l.show() for l in letters])
-    print("-----------------------letters-----------------------")
-    letters1 = letterword[0]
-    letters2 = letterword[1]
-    letters3 = [letter5, letter1]
-    letters4 = [letter1]
-    print("----------------------dominated----------------------")
-    Ac2 = [s1,s2,s4]
-    ABConfig2 = ABConfiguration(Ac2, Bstate)
-    letterword2 = ABConfig2.configuration_to_letterword(max_time_value)
-    #for letters in letterword2:
-        #print([l.show() for l in letters])
-    print(letterword2)
-    print(letterword_dominated(letterword2,letterword))
-    print("----------------------letterword_to_configuration-----------------")
-    ABConfig3 = letterword_to_configuration(letterword, 's')
-    print([state.show() for state in ABConfig3.Aconfig])
-    print(ABConfig3.Bstate.show())
-    print("----------------next_region---------------------------")
-    """
-    """
-    print("----------------compute_wsucc----------------------")
-    w = [[Letter(L1, regions[0]), Letter(L2, regions[2])]]
-    wsucc = compute_wsucc(w, max_time_value)
-    for letterword in wsucc:
-        print(letterword)
-    print()
-    w = [[Letter(L1, regions[5]), Letter(L2, regions[9])]]
-    wsucc = compute_wsucc(w, max_time_value)
-    print(wsucc)
-    print()
-    w = [[Letter(L1, regions[0])], [Letter(L2, regions[1])]]
-    wsucc = compute_wsucc(w, max_time_value)
-    for letterword in wsucc:
-        print(letterword)
-    print()
-    w = [[Letter(L1, regions[1])], [Letter(L3, regions[1])]]
-    wsucc = compute_wsucc(w, max_time_value)
-    for letterword in wsucc:
-        print(letterword)
-    """
-    #print("--------------------B----------------------")
-    #B,_ = buildOTA(paras[2], 'q')
-    #B.show()
+    print(ota_inclusion(4, DD, AA)[0])
+    print(ota_inclusion(4, AA, DD)[0])
 
 if __name__ == '__main__':
 	main()

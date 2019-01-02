@@ -113,6 +113,14 @@ class EquivalenceTest(unittest.TestCase):
         for region, next in test_data:
             self.assertEqual(next_region(region, max_time_value), next)
     
+    def testMinnumInRegion(self):
+        r1 = Constraint("[5,9]")
+        r2 = Constraint("(4,+)")
+        r3 = Constraint("(0,8)")
+        self.assertEqual(minnum_in_region(r1),5)
+        self.assertAlmostEqual(minnum_in_region(r2),4.1)
+        self.assertAlmostEqual(minnum_in_region(r3),0.1)
+
     def testComputeWsucc(self):
         w = [{Letter(L1, regions[0]), Letter(Q1, regions[0])}]
         wsucc,_ = compute_wsucc(Letterword(w,None,''), max_time_value, A, B)
@@ -286,13 +294,23 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(is_bad_letterword(letterword4, A, B), False)
 
     def testOTAInclusion(self):
-        self.assertEqual(ota_inclusion(max_time_value, AA, BB), False)
-        self.assertEqual(ota_inclusion(max_time_value, AA, CC), True)
-        self.assertEqual(ota_inclusion(max_time_value, CC, AA), True)
-        self.assertEqual(ota_inclusion(max_time_value, DD, AA), True)
-        self.assertEqual(ota_inclusion(max_time_value, AA, DD), False)
-        self.assertEqual(ota_inclusion(max_time_value, EE, AA), True)
-        self.assertEqual(ota_inclusion(max_time_value, AA, EE), False)
-        
+        self.assertEqual(ota_inclusion(max_time_value, AA, BB)[0], False)
+        self.assertEqual(ota_inclusion(max_time_value, AA, CC)[0], True)
+        self.assertEqual(ota_inclusion(max_time_value, CC, AA)[0], True)
+        self.assertEqual(ota_inclusion(max_time_value, DD, AA)[0], True)
+        self.assertEqual(ota_inclusion(max_time_value, AA, DD)[0], False)
+        self.assertEqual(ota_inclusion(max_time_value, EE, AA)[0], True)
+        self.assertEqual(ota_inclusion(max_time_value, AA, EE)[0], False)
+    
+    def testFindPath(self):
+        flag, w = ota_inclusion(max_time_value, AA, EE)
+        path, timedwords = findpath(w, 'q', EE.sigma)
+        for letterword in path:
+            print(letterword.action)
+            print(letterword.lw)
+        print()
+        for timedword in timedwords:
+            print(timedword)
+
 if __name__ == "__main__":
     unittest.main()
