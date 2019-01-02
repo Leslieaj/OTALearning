@@ -41,6 +41,8 @@ C, _ = buildOTA('../c.json', 'q')
 CC = buildAssistantOTA(C, 'q')
 D, _ = buildOTA('../d.json', 'q')
 DD = buildAssistantOTA(D, 'q')
+E, _ = buildOTA('../e.json', 'q')
+EE = buildAssistantOTA(E, 'q')
 
 class EquivalenceTest(unittest.TestCase):
     def testLocation(self):
@@ -282,6 +284,8 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(ota_inclusion(max_time_value, CC, AA), True)
         self.assertEqual(ota_inclusion(max_time_value, DD, AA), False)
         self.assertEqual(ota_inclusion(max_time_value, AA, DD), True)
-
+        self.assertEqual(ota_inclusion(max_time_value, EE, AA), True)
+        self.assertEqual(ota_inclusion(max_time_value, AA, EE), False)
+        
 if __name__ == "__main__":
     unittest.main()
