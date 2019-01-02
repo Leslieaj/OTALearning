@@ -402,7 +402,6 @@ def ota_inclusion(max_time_value, A, B):
                 to_explore.append(nw)
         if w not in explored:
             explored.append(w)
-    #return w0
 
 def findpath(letterword, flag, sigma):
     """When get a letterword, find the path ends in the letterword.
