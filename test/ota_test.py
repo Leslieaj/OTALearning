@@ -78,6 +78,13 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(set(AA.trans),set([tran0,tran1,tran2,tran3,tran4,tran5,tran6,tran7,tran8,tran9,tran10,tran11,tran12,tran13]))
         self.assertEqual(AA.initstate_name,'1')
         self.assertEqual(AA.accept_names,['3'])
+    
+    def testResetTimedword(self):
+        tw1 = Timedword('a',2)
+        rtw1 = ResetTimedword('b',3.1,True)
+        self.assertEqual(tw1.show(), "(a,2)")
+        self.assertEqual(rtw1.show(), "(b,3.1,R)")
+        #print(rtw1)
 
 if __name__ == "__main__":
     unittest.main()

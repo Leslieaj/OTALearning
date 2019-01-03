@@ -178,6 +178,23 @@ class Timedword(object):
     def __repr__(self):
         return self.show()
 
+class ResetTimedword(Timedword):
+    """The definition of timedword with resetting information.
+    """
+    def __init__(self, action, time, reset):
+        self.action = action
+        self.time = time
+        self.reset = reset
+    
+    def resetflag(self):
+        if self.reset == True:
+            return 'R'
+        else:
+            return 'N'
+
+    def show(self):
+        return '(' + self.action + ',' + str(self.time) + ',' + self.resetflag() + ')'
+
 def buildOTA(jsonfile, otaflag):
     """
         build the teacher OTA from a json file.
