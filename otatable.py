@@ -3,24 +3,24 @@
 class Element(object):
     """The definition of the element in OTA observation table.
     """
-    def __init__(self, rtws=[], value=[]):
-        self.rtws = rtws or []
+    def __init__(self, tws=[], value=[]):
+        self.tws = tws or []
         self.value = value or []
     
     def __eq__(self, element):
-        if self.rtws == element.rtws and self.value == element.value:
+        if self.tws == element.tws and self.value == element.value:
             return True
         else:
             return False
 
     def get_tws_e(self, e):
-        rtws_e = [rtw for rtw in self.rtws]
+        tws_e = [tw for tw in self.tws]
         if len(e) == 0:
-            return rtws_e
+            return tws_e
         else:
-            for rtw in e:
-                rtws_e.append(rtw)
-            return rtws_e
+            for tw in e:
+                tws_e.append(tw)
+            return tws_e
 
     def row(self):
         return self.value
@@ -30,6 +30,9 @@ class Element(object):
         for v in self.value:
             state_name = state_name+str(v)
         return state_name
+
+    def show(self):
+        return [tw.show() for tw in self.tws], self.value
 
 class OTATable(object):
     """The definition of OTA observation table.
