@@ -1,9 +1,9 @@
-#Unit tests fot ota.py
+#Unit tests for ota.py
 
 import unittest
 import sys
 sys.path.append('../')
-from equivalence import *
+from ota import *
 
 L1 = Location("1", True, False, 's')
 L2 = Location("2", False, False, 's')
