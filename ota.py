@@ -72,6 +72,31 @@ class OTATran(object):
         self.reset = reset
         self.target = target
         self.flag = flag
+    def is_pass(self, tw):
+        """Determine whether the timeword tw can pass the transition.
+        """
+        # - means empty
+        #if tw.action == "-":
+            #return True
+        if tw.action == self.label:
+            for constraint in self.constraints:
+                if constraint.isininterval(tw.time):
+                    return True
+        else:
+            return False
+        return False
+    
+    def is_pass_reset(self, tw):
+        """Magic...
+        """
+        if tw.action == self.label and tw.reset == self.reset:
+            for constraint in self.constraints:
+                if constraint.isininterval(tw.time):
+                    return True
+        else:
+            return False
+        return False
+
     def __eq__(self, otatran):
         if self.source == otatran.source and self.label == otatran.label and self.constraints == otatran.constraints and self.reset == otatran.reset and self.target == otatran.target and self.flag == otatran.flag:
             return True
@@ -140,6 +165,29 @@ class OTA(object):
                 return l
         return None
 
+    def is_accepted(self, tws):
+        """Determine whether the OTA accepts a timed words or not.
+        """
+        if len(tws) == 0:
+            if self.initstate_name in self.accept_names:
+                return 1
+            else:
+                return 0
+        else:
+            current_statename = self.initstate_name
+            for tw in tws:
+                flag = False
+                for tran in self.trans:
+                    if tran.source == current_statename and tran.is_pass(tw):
+                        current_statename = tran.target
+                        flag = True
+                        break
+                if flag == False:
+                    return -1
+            if current_statename in self.accept_names:
+                return 1
+            else:
+                return 0
     def show(self):
         print("OTA name: ")
         print(self.name)
@@ -195,6 +243,12 @@ class ResetTimedword(Timedword):
     def show(self):
         return '(' + self.action + ',' + str(self.time) + ',' + self.resetflag() + ')'
     
+    def __eq__(self, rtw):
+        if self.action == rtw.action and self.time == rtw.time and self.reset == rtw.reset:
+            return True
+        else:
+            return False
+
     def __str__(self):
         return self.show()
     def __repr__(self):

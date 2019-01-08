@@ -3,9 +3,10 @@
 import unittest
 import sys
 sys.path.append('../')
-from ota import *
 from otatable import *
 
+A, _ = buildOTA('../a.json', 's')
+AA = buildAssistantOTA(A, 's')  # Assist
 
 rtw1 = ResetTimedword('a',0,True)
 rtw2 = ResetTimedword('b',0,True)
@@ -48,6 +49,21 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(new_S, [e0,e4])
         self.assertEqual(new_R, [e1,e2,e3])
         self.assertEqual(move,[e4])
+
+    def testMakeclosed(self):
+        S1 = [e0]
+        R1 = [e1,e2]
+        E1 = []
+        T1 = OTATable(S1,R1,E1)
+        #T1.show()
+        flag_closed, new_S, new_R, move = T1.is_closed()
+        self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
+
+        R2 = [e1,e2,e3,e4]
+        T2 = OTATable(S1,R2,E1)
+        flag_closed, new_S, new_R, move = T2.is_closed()
+        T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
+        T3.show()
 
 if __name__ == "__main__":
     unittest.main()

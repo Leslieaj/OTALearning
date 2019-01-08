@@ -1,5 +1,7 @@
 # The definitions on the OTA observation table.
 
+from ota import *
+
 class Element(object):
     """The definition of the element in OTA observation table.
     """
@@ -141,13 +143,49 @@ class OTATable(object):
     def show(self):
         print("new_S:"+str(len(self.S)))
         for s in self.S:
-            print([tw.show() for tw in s.tws], s.row())
+            print(s.tws, s.row())
         print("new_R:"+str(len(self.R)))
         for r in self.R:
-            print([tw.show() for tw in r.tws], r.row())
+            print(r.tws, r.row())
         print("new_E:"+str(len(self.E)))
         for e in self.E:
-            print([tw.show() for tw in e])
+            print(e.tws)
+
+def make_closed(new_S, new_R, move, table, sigma, ota):
+    """The function makes the table closed, if the table is not closed.
+    """
+    #flag, new_S, new_R, move = table.is_closed()
+    new_E = table.E
+    closed_table = OTATable(new_S, new_R, new_E)
+    table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
+    for s in move:
+        s_tws = [tw for tw in s.tws]
+        for action in sigma:
+            temp_tws1 = s_tws+[ResetTimedword(action,0,True)]
+            temp_tws2 = s_tws+[ResetTimedword(action,0,False)]
+            if temp_tws1 not in table_tws:
+                temp_element = Element(temp_tws1,[])
+                fill(temp_element, closed_table.E, ota)
+                closed_table.R.append(temp_element)
+                table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
+            if temp_tws2 not in table_tws:
+                temp_element = Element(temp_tws2,[])
+                fill(temp_element, closed_table.E, ota)
+                closed_table.R.append(temp_element)
+                table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
+        #to do
+        #magic...(delete rtw which we donot want in R)
+    return closed_table
+
+def fill(element, E, ota):
+    if len(element.value) == 0:
+        f = ota.is_accepted(element.tws)
+        element.value.append(f)
+    #print len(element.value)-1, len(E)
+    for i in range(len(element.value)-1, len(E)):
+        temp_tws = element.tws + E[i]
+        f = ota.is_accepted(temp_tws)
+        element.value.append(f)
 
 def prefixes(tws):
     """Return the prefixes of a timedwords. [tws1, tws2, tws3, ..., twsn]
