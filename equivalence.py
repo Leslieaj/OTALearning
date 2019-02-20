@@ -534,6 +534,7 @@ def findDelayRTWs(letterword, flag, ota):
                 local_timedwords = Timedword(letterword.action,current_clock_valuation+delay_time)
             for otatran in ota.trans:
                 if otatran.source == source_location.name and otatran.target == target_location.name and otatran.is_pass(local_timedwords):
+                    #print(source_location.name,target_location.name)
                     reset = otatran.reset
                     delay_resettimedwords.append(ResetTimedword(letterword.action,delay_time,reset))
                     break
