@@ -522,16 +522,18 @@ def findDelayRTWs(letterword, flag, ota):
         if letterword.action == "DELAY":
             delay_time = minnum_in_region(temp_region) - current_clock_valuation
             current_clock_valuation = minnum_in_region(temp_region)
+            source_location = temp_location
         elif letterword.action in ota.sigma:
             new_timedword = Timedword(letterword.action, delay_time)
             delay_timedwords.append(new_timedword)
+            target_location = temp_location
             local_timedwords = None
             if reset == True:
                 local_timedwords = Timedword(letterword.action,delay_time)
             else:
                 local_timedwords = Timedword(letterword.action,current_clock_valuation+delay_time)
             for otatran in ota.trans:
-                if otatran.is_pass(local_timedwords):
+                if otatran.source == source_location.name and otatran.target == target_location.name and otatran.is_pass(local_timedwords):
                     reset = otatran.reset
                     delay_resettimedwords.append(ResetTimedword(letterword.action,delay_time,reset))
                     break
