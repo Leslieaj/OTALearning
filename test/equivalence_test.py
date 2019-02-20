@@ -307,5 +307,12 @@ class EquivalenceTest(unittest.TestCase):
         global_timedwords = delayTWs_to_globalTWs(delay_timedwords)
         self.assertEqual(global_timedwords, [Timedword('a',1),Timedword('b',2),Timedword('a',2),Timedword('b',4)])
 
+    def testFindDelayRTWs(self):
+        flag, w = ota_inclusion(max_time_value, AA, EE)
+        delay_resettimedwords = findDelayRTWs(w, 'q', EE)
+        # for drtw in delay_resettimedwords:
+        #     print(drtw.show())
+        self.assertEqual(delay_resettimedwords, [ResetTimedword('a',1,False),ResetTimedword('b',1,True),ResetTimedword('a',0,True),ResetTimedword('b',2,True)])
+
 if __name__ == "__main__":
     unittest.main()

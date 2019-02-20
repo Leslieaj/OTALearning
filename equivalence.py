@@ -494,3 +494,50 @@ def delayTWs_to_globalTWs(delay_timedwords):
         temp_time = temp_time + timedword.time
         global_timedwords.append(Timedword(temp_action,temp_time))
     return global_timedwords
+
+def findDelayRTWs(letterword, flag, ota):
+    """Given a path, return delay timedword with reset information.
+    """
+    path = findpath(letterword, flag, ota.sigma)
+    delay_timedwords = []
+    delay_resettimedwords = []
+    current_clock_valuation = 0
+    delay_time = 0
+    reset = False
+    for letterword in path:
+        temp_location, temp_region =  None, None
+        letter1, letter2 = None, None
+        if len(letterword.lw) == 1:
+            letter1, letter2 = list(letterword.lw[0])
+        elif len(letterword.lw) == 2:
+            letter1, letter2 = list(letterword.lw[0])[0], list(letterword.lw[1])[0]
+        else:
+            raise NotImplementedError()
+        if letter1.location.flag == flag:
+            temp_location = letter1.location
+            temp_region = letter1.constraint
+        else:
+            temp_location = letter2.location
+            temp_region = letter2.constraint
+        if letterword.action == "DELAY":
+            delay_time = minnum_in_region(temp_region) - current_clock_valuation
+            current_clock_valuation = minnum_in_region(temp_region)
+        elif letterword.action in ota.sigma:
+            new_timedword = Timedword(letterword.action, delay_time)
+            delay_timedwords.append(new_timedword)
+            local_timedwords = None
+            if reset == True:
+                local_timedwords = Timedword(letterword.action,delay_time)
+            else:
+                local_timedwords = Timedword(letterword.action,current_clock_valuation+delay_time)
+            for otatran in ota.trans:
+                if otatran.is_pass(local_timedwords):
+                    reset = otatran.reset
+                    delay_resettimedwords.append(ResetTimedword(letterword.action,delay_time,reset))
+                    break
+            current_clock_valuation = minnum_in_region(temp_region)
+        elif letterword.action == '':
+            pass
+        else:
+            raise NotImplementedError()
+    return delay_resettimedwords
