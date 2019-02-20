@@ -405,14 +405,53 @@ def ota_inclusion(max_time_value, A, B):
 
 def findpath(letterword, flag, sigma):
     """When get a letterword, find the path ends in the letterword.
-       Return a global timedword.
     """
     current_lw = letterword
     path = [current_lw]
     while current_lw.prelw is not None:
         path.insert(0, current_lw.prelw)
         current_lw = current_lw.prelw
-    #return path
+    return path
+
+def findDelayTimedwords(letterword, flag, sigma):
+    """Given a path, return the delay timedword.
+    """
+    path = findpath(letterword, flag, sigma)
+    delay_timedwords = []
+    current_clock_valuation = 0
+    delay_time = 0
+    for letterword in path:
+        temp_location, temp_region =  None, None
+        letter1, letter2 = None, None
+        if len(letterword.lw) == 1:
+            letter1, letter2 = list(letterword.lw[0])
+        elif len(letterword.lw) == 2:
+            letter1, letter2 = list(letterword.lw[0])[0], list(letterword.lw[1])[0]
+        else:
+            raise NotImplementedError()
+        if letter1.location.flag == flag:
+            temp_location = letter1.location
+            temp_region = letter1.constraint
+        else:
+            temp_location = letter2.location
+            temp_region = letter2.constraint
+        if letterword.action == "DELAY":
+            delay_time = minnum_in_region(temp_region) - current_clock_valuation
+            current_clock_valuation = minnum_in_region(temp_region)
+        elif letterword.action in sigma:
+            new_timedword = Timedword(letterword.action, delay_time)
+            delay_timedwords.append(new_timedword)
+            current_clock_valuation = minnum_in_region(temp_region)
+        elif letterword.action == '':
+            pass
+        else:
+            raise NotImplementedError()
+    return delay_timedwords
+
+def findGlobalTimedwords(letterword, flag, sigma):
+    """Given a path, return the global timedword.
+    """
+    path = findpath(letterword, flag, sigma)
     global_timedwords = []
     last_time = 0
     temp_time = 0
@@ -443,4 +482,15 @@ def findpath(letterword, flag, sigma):
             pass
         else:
             raise NotImplementedError()
-    return path, global_timedwords
+    return global_timedwords
+
+def delayTWs_to_globalTWs(delay_timedwords):
+    """Given a delay timedword, return the global timedword.
+    """
+    global_timedwords = []
+    temp_time = 0
+    for timedword in delay_timedwords:
+        temp_action = timedword.action
+        temp_time = temp_time + timedword.time
+        global_timedwords.append(Timedword(temp_action,temp_time))
+    return global_timedwords

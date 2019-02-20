@@ -291,16 +291,21 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(ota_inclusion(max_time_value, EE, AA)[0], True)
         self.assertEqual(ota_inclusion(max_time_value, AA, EE)[0], False)
     
-    def testFindPath(self):
+    def testFindDelayTimedwords(self):
         flag, w = ota_inclusion(max_time_value, AA, EE)
-        path, timedwords = findpath(w, 'q', EE.sigma)
-        # for letterword in path:
-        #     print(letterword.action)
-        #     print(letterword.lw)
-        # print()
-        # for timedword in timedwords:
-        #     print(timedword)
-        self.assertEqual(timedwords, [Timedword('a',1),Timedword('b',2),Timedword('a',2),Timedword('b',4)])
+        delay_timedwords = findDelayTimedwords(w, 'q', EE.sigma)
+        self.assertEqual(delay_timedwords, [Timedword('a',1),Timedword('b',1),Timedword('a',0),Timedword('b',2)])
+
+    def testFindGlobalTimedwords(self):
+        flag, w = ota_inclusion(max_time_value, AA, EE)
+        global_timedwords = findGlobalTimedwords(w, 'q', EE.sigma)
+        self.assertEqual(global_timedwords, [Timedword('a',1),Timedword('b',2),Timedword('a',2),Timedword('b',4)])
+
+    def testdelayTWs_to_globalTWs(self):
+        flag, w = ota_inclusion(max_time_value, AA, EE)
+        delay_timedwords = findDelayTimedwords(w, 'q', EE.sigma)
+        global_timedwords = delayTWs_to_globalTWs(delay_timedwords)
+        self.assertEqual(global_timedwords, [Timedword('a',1),Timedword('b',2),Timedword('a',2),Timedword('b',4)])
 
 if __name__ == "__main__":
     unittest.main()
