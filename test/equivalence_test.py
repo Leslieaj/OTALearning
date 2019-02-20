@@ -314,5 +314,11 @@ class EquivalenceTest(unittest.TestCase):
         #     print(drtw.show())
         self.assertEqual(delay_resettimedwords, [ResetTimedword('a',1,False),ResetTimedword('b',1,True),ResetTimedword('a',0,True),ResetTimedword('b',2,True)])
 
+    def testdRTWs_to_lRTWs(self):
+        flag, w = ota_inclusion(max_time_value, AA, EE)
+        delay_resettimedwords = findDelayRTWs(w, 'q', EE)
+        local_resettimedwords = dRTWs_to_lRTWs(delay_resettimedwords)
+        self.assertEqual(local_resettimedwords, [ResetTimedword('a',1,False),ResetTimedword('b',2,True),ResetTimedword('a',0,True),ResetTimedword('b',2,True)])
+
 if __name__ == "__main__":
     unittest.main()

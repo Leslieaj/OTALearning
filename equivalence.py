@@ -544,3 +544,18 @@ def findDelayRTWs(letterword, flag, ota):
         else:
             raise NotImplementedError()
     return delay_resettimedwords
+
+def dRTWs_to_lRTWs(delay_resettimedwords):
+    """Given a delay reset-timedwords, return the local reset-timedwords.
+    """
+    reset = False
+    current_clock_valuation = 0
+    local_resettimedwords = []
+    for drtw in delay_resettimedwords:
+        if reset == False:
+            current_clock_valuation = current_clock_valuation + drtw.time
+        else:
+            current_clock_valuation = drtw.time
+        local_resettimedwords.append(ResetTimedword(drtw.action,current_clock_valuation,drtw.reset))
+        reset = drtw.reset
+    return local_resettimedwords
