@@ -161,25 +161,35 @@ def make_closed(new_S, new_R, move, table, sigma, ota):
     for s in move:
         s_tws = [tw for tw in s.tws]
         for action in sigma:
-            temp_tws1 = s_tws+[ResetTimedword(action,0,True)]
-            temp_tws2 = s_tws+[ResetTimedword(action,0,False)]
-            if temp_tws1 not in table_tws:
-                temp_element = Element(temp_tws1,[])
+            new_tw = get_TW_delay_zero(s_tws, action, ota)
+            temp_tws = s_tws+[new_tw]
+            if temp_tws not in table_tws:
+                temp_element = Element(temp_tws,[])
                 fill(temp_element, closed_table.E, ota)
                 closed_table.R.append(temp_element)
                 table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
-            if temp_tws2 not in table_tws:
-                temp_element = Element(temp_tws2,[])
-                fill(temp_element, closed_table.E, ota)
-                closed_table.R.append(temp_element)
-                table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
-        #to do
-        #magic...(delete rtw which we donot want in R)
     return closed_table
+
+def get_TW_delay_zero(tws, action, ota):
+    """When move a timedwords tws from R to S, generate the new timedwords with timed action with delay 0.
+    """
+    new_timedword = None
+    if tws[len(tws)-1].reset == False:
+        new_timedword = Timedword(action,tws[len(tws)-1].time)
+    else:
+        new_timedword = Timedword(action,0)
+    local_tws = dRTWs_to_lRTWs(tws)
+    source_location_name = ota.run_resettimedwords(local_tws)
+    new_resettimedword = None
+    for otatran in ota.trans:
+        if otatran.source == source_location_name and otatran.is_pass(new_timedword):
+            new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
+            break
+    return new_resettimedword
 
 def fill(element, E, ota):
     if len(element.value) == 0:
-        f = ota.is_accepted(element.tws)
+        f = ota.is_accepted_reset(element.tws)
         element.value.append(f)
     #print len(element.value)-1, len(E)
     for i in range(len(element.value)-1, len(E)):
