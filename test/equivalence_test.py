@@ -290,8 +290,22 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(ota_inclusion(max_time_value, AA, DD)[0], False)
         self.assertEqual(ota_inclusion(max_time_value, EE, AA)[0], True)
         self.assertEqual(ota_inclusion(max_time_value, AA, EE)[0], False)
+        ota1, _ = buildOTA('../test.json', 'q')
+        c_ota1 = buildAssistantOTA(ota1, 'q')
+        self.assertEqual(ota_inclusion(max_time_value, AA, c_ota1)[0], True)
+        self.assertEqual(ota_inclusion(max_time_value, c_ota1, AA)[0], False)
     
     def testFindDelayTimedwords(self):
+        ota1, _ = buildOTA('../test.json', 'q')
+        c_ota1 = buildAssistantOTA(ota1, 'q')
+        teacher, _ = buildOTA('../example.json', 's')
+        c_teacher = buildAssistantOTA(teacher, 's')
+        flag1, w1 = ota_inclusion(max_time_value, c_ota1, c_teacher)
+        delay_timedwords1 = findDelayTimedwords(w1, 's', c_teacher.sigma)
+        # for tw in delay_timedwords1:
+        #     print(tw.show())
+        self.assertEqual(delay_timedwords1, [Timedword('a',1)])
+
         flag, w = ota_inclusion(max_time_value, AA, EE)
         delay_timedwords = findDelayTimedwords(w, 'q', EE.sigma)
         self.assertEqual(delay_timedwords, [Timedword('a',1),Timedword('b',1),Timedword('a',0),Timedword('b',2)])

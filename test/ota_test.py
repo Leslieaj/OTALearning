@@ -86,5 +86,10 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(rtw1.show(), "(b,3.1,R)")
         #print(rtw1)
 
+    def testcase1(self):
+        ota1, _ = buildOTA('../test.json', 's')
+        c_ota1 = buildAssistantOTA(ota1, 's')
+        c_ota1.show()
+
 if __name__ == "__main__":
     unittest.main()

@@ -259,39 +259,40 @@ def buildOTA(jsonfile, otaflag):
         build the teacher OTA from a json file.
     """
     #otaflag = 's'
-    data = json.load(open(jsonfile,'r'))
-    name = data["name"]
-    locations_list = [l for l in data["l"]]
-    sigma = [s for s in data["sigma"]]
-    trans_set = data["tran"]
-    initstate = data["init"]
-    accept_list = [l for l in data["accept"]]
-    L = [Location(location, False, False, otaflag) for location in locations_list]
-    for l in L:
-        if l.name == initstate:
-            l.init = True
-        if l.name in accept_list:
-            l.accept = True
-    trans = []
-    for tran in trans_set:
-        tran_id = int(tran)
-        source = trans_set[tran][0]
-        label = trans_set[tran][1]
-        intervals_str = trans_set[tran][2]
-        intervals_list = intervals_str.split('U')
-        constraints_list = []
-        for constraint in intervals_list:
-            new_constraint = Constraint(constraint.strip())
-            constraints_list.append(new_constraint)
-        reset_temp = trans_set[tran][3]
-        reset = False
-        if reset_temp == "r":
-            reset = True
-        target = trans_set[tran][4]
-        ota_tran = OTATran(tran_id, source, label, constraints_list, reset, target, otaflag)
-        trans += [ota_tran]
-    trans.sort(key=lambda x: x.id)
-    return OTA(name, sigma, L, trans, initstate, accept_list), sigma
+    with open(jsonfile,'r') as f:
+        data = json.load(f)
+        name = data["name"]
+        locations_list = [l for l in data["l"]]
+        sigma = [s for s in data["sigma"]]
+        trans_set = data["tran"]
+        initstate = data["init"]
+        accept_list = [l for l in data["accept"]]
+        L = [Location(location, False, False, otaflag) for location in locations_list]
+        for l in L:
+            if l.name == initstate:
+                l.init = True
+            if l.name in accept_list:
+                l.accept = True
+        trans = []
+        for tran in trans_set:
+            tran_id = int(tran)
+            source = trans_set[tran][0]
+            label = trans_set[tran][1]
+            intervals_str = trans_set[tran][2]
+            intervals_list = intervals_str.split('U')
+            constraints_list = []
+            for constraint in intervals_list:
+                new_constraint = Constraint(constraint.strip())
+                constraints_list.append(new_constraint)
+            reset_temp = trans_set[tran][3]
+            reset = False
+            if reset_temp == "r":
+                reset = True
+            target = trans_set[tran][4]
+            ota_tran = OTATran(tran_id, source, label, constraints_list, reset, target, otaflag)
+            trans += [ota_tran]
+        trans.sort(key=lambda x: x.id)
+        return OTA(name, sigma, L, trans, initstate, accept_list), sigma
 
 def buildAssistantOTA(ota, otaflag):
     """
