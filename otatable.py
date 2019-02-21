@@ -174,11 +174,11 @@ def get_TW_delay_zero(tws, action, ota):
     """When move a timedwords tws from R to S, generate the new timedwords with timed action with delay 0.
     """
     new_timedword = None
-    if tws[len(tws)-1].reset == False:
-        new_timedword = Timedword(action,tws[len(tws)-1].time)
+    local_tws = dRTWs_to_lRTWs(tws)
+    if tws[len(local_tws)-1].reset == False:
+        new_timedword = Timedword(action,tws[len(local_tws)-1].time)
     else:
         new_timedword = Timedword(action,0)
-    local_tws = dRTWs_to_lRTWs(tws)
     source_location_name = ota.run_resettimedwords(local_tws)
     new_resettimedword = None
     for otatran in ota.trans:
@@ -191,11 +191,17 @@ def fill(element, E, ota):
     if len(element.value) == 0:
         f = ota.is_accepted_reset(element.tws)
         element.value.append(f)
-    #print len(element.value)-1, len(E)
-    for i in range(len(element.value)-1, len(E)):
-        temp_tws = element.tws + E[i]
-        f = ota.is_accepted(temp_tws)
-        element.value.append(f)
+
+    # location_name = ota.run_resettimedwords(element.tws)
+    # reset = element.tws[len(element.tws)-1].reset
+    # clock_valuation = element.tws[len(element.tws)-1].time
+    # for i in range(len(element.value)-1, len(E)):
+    #     for tw in E[i]:
+    #         if reset == False:
+    #             new_timedword = Timedword(tw.action,)
+    #     #f = ota.is_accepted(temp_tws)
+    #     #element.value.append(f)
+
 
 def prefixes(tws):
     """Return the prefixes of a timedwords. [tws1, tws2, tws3, ..., twsn]
