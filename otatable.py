@@ -1,5 +1,6 @@
 # The definitions on the OTA observation table.
 
+import copy
 from ota import *
 
 class Element(object):
@@ -171,7 +172,7 @@ def make_closed(new_S, new_R, move, table, sigma, ota):
     return closed_table
 
 def get_TW_delay_zero(tws, action, ota):
-    """When move a timedwords tws from R to S, generate the new timedwords with timed action with delay 0.
+    """When move a timedwords tws from R to S, generate the new delay timedwords with reset information with delay 0.
     """
     new_timedword = None
     local_tws = dRTWs_to_lRTWs(tws)
@@ -183,24 +184,40 @@ def get_TW_delay_zero(tws, action, ota):
     new_resettimedword = None
     for otatran in ota.trans:
         if otatran.source == source_location_name and otatran.is_pass(new_timedword):
-            new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
+            #new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
+            # return the delay timed words with reset information
+            new_resettimedword = ResetTimedword(action,0,otatran.reset)
             break
     return new_resettimedword
 
 def fill(element, E, ota):
+    """Fill an element in S U R.
+    """
     if len(element.value) == 0:
         f = ota.is_accepted_reset(element.tws)
         element.value.append(f)
-
-    # location_name = ota.run_resettimedwords(element.tws)
-    # reset = element.tws[len(element.tws)-1].reset
-    # clock_valuation = element.tws[len(element.tws)-1].time
-    # for i in range(len(element.value)-1, len(E)):
-    #     for tw in E[i]:
-    #         if reset == False:
-    #             new_timedword = Timedword(tw.action,)
-    #     #f = ota.is_accepted(temp_tws)
-    #     #element.value.append(f)
+    local_tws = dRTWs_to_lRTWs(element.tws)
+    current_location_name = ota.run_resettimedwords(local_tws)
+    for i in range(len(element.value)-1, len(E)):
+        current_location = copy.deepcopy(current_location_name)
+        reset = element.tws[len(element.tws)-1].reset
+        clock_valuation = element.tws[len(element.tws)-1].time
+        for tw in E[i]:
+            new_timedword = None
+            if reset == False:
+                new_timedword = Timedword(tw.action, clock_valuation+tw.time)
+            else:
+                new_timedword = Timedword(tw.action,tw.time)
+            for otatran in ota.trans:
+                if otatran.source == current_location and otatran.is_pass(new_timedword):
+                    reset = otatran.reset
+                    clock_valuation = new_timedword.time
+                    current_location = otatran.target
+                    break
+        if current_location in ota.accept_names:
+            element.value.append(1)
+        else:
+            element.value.append(0)
 
 
 def prefixes(tws):
