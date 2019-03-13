@@ -254,3 +254,26 @@ def delete_prefix(tws, pref):
     else:
         new_tws = tws[len(pref):]
         return new_tws
+
+def add_ctx(ctx, table, ota):
+    """Given a counterexample ctx, add it and its prefixes to R (except those already present in S and R)
+    """
+    pref = prefixes(ctx)
+    S_tws = [s.tws for s in table.S]
+    S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
+    new_S = [s for s in table.S]
+    new_R = [r for r in table.R]
+    new_E = [e for e in table.E]
+    for tws in pref:
+        need_add = True
+        for stws in S_R_tws:
+        #for stws in S_tws:
+            #if tws_equal(tws, stws):
+            if tws == stws:
+                need_add = False
+                break
+        if need_add == True:
+            temp_element = Element(tws,[])
+            fill(temp_element, new_E, ota)
+            new_R.append(temp_element)
+    return OTATable(new_S, new_R, new_E)

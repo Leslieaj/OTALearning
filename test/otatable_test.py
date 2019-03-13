@@ -113,7 +113,7 @@ class EquivalenceTest(unittest.TestCase):
         E1 = []
         T1 = OTATable(S1,R1,E1)
         FA1 = to_fa(T1, 1)
-        H1 = fa_to_ota(FA1, ["a","b"], 1)
+        H1 = fa_to_ota(FA1, AA.sigma, 1)
         H1.show()
         flag1, w1 = ota_inclusion(max_time_value, H1, AA)
         self.assertEqual(flag1, False)
@@ -121,6 +121,22 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(rtws1, [ResetTimedword('a',1,False)])
         ctx1 = Element(rtws1, [1])
         self.assertEqual(ctx1, Element([ResetTimedword('a',1,False)],[1]))
+        T2 = add_ctx(rtws1,T1,AA)
+        #T2.show()
+        flag_closed, new_S, new_R, move = T2.is_closed()
+        self.assertEqual(flag_closed, False)
+        T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
+        #T3.show()
+        FA2 = to_fa(T3, 2)
+        #FA2.show()
+        H2 = fa_to_ota(FA2, AA.sigma, 2)
+        #H2.show()
+
+        flag2, w2 = ota_inclusion(max_time_value, AA, H2)
+        self.assertEqual(flag2, False)
+        rtws2 = findDelayRTWs(w2, 's', AA)
+        print(rtws2)
+
 
 if __name__ == "__main__":
     unittest.main()
