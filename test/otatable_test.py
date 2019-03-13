@@ -254,10 +254,12 @@ class EquivalenceTest(unittest.TestCase):
         FA6 = to_fa(T10, 6)
         H6 = fa_to_ota(FA6, AA.sigma, 6)
         H6.show()
-        flag6, w6 = ota_inclusion(max_time_value, AA, H6)
-        self.assertEqual(flag6, True)
-        flag7, w7 = ota_inclusion(max_time_value, H6, AA)
-        self.assertEqual(flag7, True)
+        # flag6, w6 = ota_inclusion(max_time_value, AA, H6)
+        # self.assertEqual(flag6, True)
+        # flag7, w7 = ota_inclusion(max_time_value, H6, AA)
+        # self.assertEqual(flag7, True)
+        flag_equivalent, _ = equivalence_query(max_time_value,AA,H6)
+        self.assertEqual(flag_equivalent, True)
 
 
 if __name__ == "__main__":
