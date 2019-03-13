@@ -2,7 +2,7 @@
 
 import copy
 from ota import *
-from fa import *
+#from fa import *
 
 class Element(object):
     """The definition of the element in OTA observation table.
@@ -254,7 +254,3 @@ def delete_prefix(tws, pref):
     else:
         new_tws = tws[len(pref):]
         return new_tws
-
-def to_fa(S_U_R):
-    new_SUR = [dRTWs_to_lRTWs(drtws) for drtws in S_U_R]
-    # build a finite automaton

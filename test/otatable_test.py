@@ -3,8 +3,9 @@
 import unittest
 import sys
 sys.path.append('../')
-from otatable import *
+#from otatable import *
 from equivalence import *
+from hypothesis import *
 
 A, _ = buildOTA('../example.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
@@ -67,6 +68,24 @@ class EquivalenceTest(unittest.TestCase):
         flag_closed, new_S, new_R, move = T2.is_closed()
         T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
         T3.show()
+
+    def testToFA(self):
+        S1 = [e0]
+        R1 = [e1,e2]
+        E1 = []
+        T1 = OTATable(S1,R1,E1)
+        #T1.show()
+        flag_closed, new_S, new_R, move = T1.is_closed()
+        self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
+
+        ctx1 = Element([ResetTimedword('a',1,False)],[1])
+        R2 = [e1,e2,ctx1]
+        T2 = OTATable(S1,R2,E1)
+        flag_closed, new_S, new_R, move = T2.is_closed()
+        T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
+        #T3.show()
+        FA1 = to_fa(T3, 1)
+        FA1.show()
 
 if __name__ == "__main__":
     unittest.main()
