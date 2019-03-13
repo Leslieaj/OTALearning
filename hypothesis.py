@@ -51,8 +51,8 @@ def to_fa(otatable, n):
         need_newtran = True
         for tran in trans:
             if source == tran.source and target == tran.target:
-                if a.action == tran.label[0].action and a.reset == tran.label[0].resset:
-                    need_newtran == False
+                if a.action == tran.label[0].action and a.reset == tran.label[0].reset:
+                    need_newtran = False
                     if a not in tran.label:
                         tran.label.append(a)
                 break

@@ -110,7 +110,8 @@ class OTATable(object):
                     for e1 in temp_elements1:
                         for e2 in temp_elements2:
                             #print [tw.show() for tw in e1.tws], [tw.show() for tw in e2.tws]
-                            if len(e1.tws) == 1 and len(e2.tws) == 1 and e1.tws == e2.tws:
+                            #if len(e1.tws) == 1 and len(e2.tws) == 1 and e1.tws == e2.tws:
+                            if len(e1.tws) == 1 and len(e2.tws) == 1 and e1.tws[0].action == e2.tws[0].action and e1.tws[0].time == e2.tws[0].time:
                                 if e1.row() == e2.row():
                                     pass
                                 else:
@@ -194,10 +195,10 @@ def get_TW_delay_zero(tws, action, ota):
 def fill(element, E, ota):
     """Fill an element in S U R.
     """
-    if len(element.value) == 0:
-        f = ota.is_accepted_reset(element.tws)
-        element.value.append(f)
     local_tws = dRTWs_to_lRTWs(element.tws)
+    if len(element.value) == 0:
+        f = ota.is_accepted_reset(local_tws)
+        element.value.append(f)
     current_location_name = ota.run_resettimedwords(local_tws)
     for i in range(len(element.value)-1, len(E)):
         current_location = copy.deepcopy(current_location_name)
