@@ -123,22 +123,45 @@ class OTATable(object):
                                             return flag, new_a, new_e_index
         return flag, new_a, new_e_index
     
-    def is_evidence_closed(self):
+    def is_evidence_closed(self, ota):
         """Determine whether the table is evidence-closed.
         """
         flag = True
         table_tws = [s.tws for s in self.S] + [r.tws for r in self.R]
-        #new_R = [r for r in self.R]
         new_added = []
         for s in self.S:
             for e in self.E:
-                temp_se = [tw for tw in s.tws] + [tw for tw in e]
-                if temp_se not in table_tws:
-                    table_tws.append(temp_se)
-                    new_tws = temp_se
-                    new_element = Element(new_tws,[])
-                    #new_R.append(new_element)
-                    new_added.append(new_element)
+                temp_e = []
+                local_s = dRTWs_to_lRTWs(s.tws)
+                current_location_name = ota.run_resettimedwords(local_s)
+                current_location = copy.deepcopy(current_location_name)
+                reset = True
+                clock_valuation = 0
+                if len(s.tws) > 0:
+                    reset = local_s[len(local_s)-1].reset
+                    clock_valuation = local_s[len(local_s)-1].time
+                for tw in e:
+                    new_timedword = None
+                    if reset == False:
+                        new_timedword = Timedword(tw.action, clock_valuation+tw.time)
+                    else:
+                        new_timedword = Timedword(tw.action,tw.time)
+                    for otatran in ota.trans:
+                        if otatran.source == current_location and otatran.is_pass(new_timedword):
+                            delay_resettimedword = ResetTimedword(tw.action,tw.time,otatran.reset)
+                            temp_e.append(delay_resettimedword)
+                            reset = otatran.reset
+                            clock_valuation = new_timedword.time
+                            current_location = otatran.target
+                            break
+                temp_se = [rtw for rtw in s.tws] + [rtw for rtw in temp_e]
+                prefs = prefixes(temp_se)
+                for pref in prefs:
+                    if pref not in table_tws:
+                        table_tws.append(pref)
+                        new_tws = temp_se
+                        new_element = Element(new_tws,[])
+                        new_added.append(new_element)
         if len(new_added) > 0:
             flag = False
         return flag, new_added
@@ -191,6 +214,15 @@ def make_consistent(new_a, new_e_index, table, sigma, ota):
         fill(new_R[j], new_E, ota)
     consistent_table = OTATable(new_S, new_R, new_E)
     return consistent_table
+
+def make_evidence_closed(new_added, table, sigma, ota):
+    for i in range(0,len(new_added)):
+        fill(new_added[i], table.E, ota)
+    new_E = [e for e in table.E]
+    new_R = [r for r in table.R] + [nr for nr in new_added]
+    new_S = [s for s in table.S]
+    evidence_closed_table = OTATable(new_S, new_R, new_E)
+    return evidence_closed_table
 
 def get_TW_delay_zero(tws, action, ota):
     """When move a timedwords tws from R to S, generate the new delay timedwords with reset information with delay 0.
