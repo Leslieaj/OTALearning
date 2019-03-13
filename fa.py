@@ -22,11 +22,11 @@ class FAState(object):
         return self.get_name() + ',' + str(self.init) + ',' + str(self.accept)
 
 class FATran(object):
-    def __init__(self, id, source="", target="", resettimedword=None):
+    def __init__(self, id, source="", target="", label=None):
         self.id = id
         self.source = source
         self.target = target
-        self.rtw = resettimedword
+        self.label = label
 
 class FA:
     def __init__(self, name="", rtw_alphabet = [], states = None, trans = [], initstate_name = "", accept_names = []):
@@ -48,7 +48,7 @@ class FA:
             print(s.name, s.init, s.accept)
         print("transitions: (id, source, target, timedword): ")
         for t in self.trans:
-            print(t.id, t.source, t.target, t.rtw)
+            print(t.id, t.source, t.target, t.label)
             #t.resettimedword.show()
             #print
         print("init state: ")

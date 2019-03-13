@@ -3,11 +3,15 @@ from otatable import *
 
 
 def to_fa(otatable, n):
+    """Given an ota table, transform it to a finite automaton.
+    """
+    ### First, need to transform the resettimedwords of the elements in S_U_R 
+    ### to clock valuation timedwords with reset informations.
     S_U_R = [s for s in otatable.S] + [r for r in otatable.R]
     table_elements = [Element(dRTWs_to_lRTWs(e.tws), e.value) for e in S_U_R]
-    rtw_alphabet = []
     ### build a finite automaton
     ## FAStates
+    rtw_alphabet = []
     states = []
     initstate_name = ""
     accept_names = []
@@ -47,11 +51,12 @@ def to_fa(otatable, n):
         need_newtran = True
         for tran in trans:
             if source == tran.source and target == tran.target:
-                if a == tran.rtw:
+                if a.action == tran.label[0].action and a.reset == tran.label[0].resset:
                     need_newtran == False
+                    tran.label.append(a)
                 break
         if need_newtran == True:
-            temp_tran = FATran(trans_number, source, target, a)
+            temp_tran = FATran(trans_number, source, target, [a])
             trans.append(temp_tran)
             trans_number = trans_number + 1
     fa = FA("FA_"+str(n),rtw_alphabet,states,trans,initstate_name,accept_names)
