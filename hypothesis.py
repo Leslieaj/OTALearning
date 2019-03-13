@@ -3,7 +3,7 @@ from otatable import *
 
 
 def to_fa(otatable, n):
-    """Given an ota table, transform it to a finite automaton.
+    """Given an ota table, build a finite automaton.
     """
     ### First, need to transform the resettimedwords of the elements in S_U_R 
     ### to clock valuation timedwords with reset informations.
@@ -53,7 +53,8 @@ def to_fa(otatable, n):
             if source == tran.source and target == tran.target:
                 if a.action == tran.label[0].action and a.reset == tran.label[0].resset:
                     need_newtran == False
-                    tran.label.append(a)
+                    if a not in tran.label:
+                        tran.label.append(a)
                 break
         if need_newtran == True:
             temp_tran = FATran(trans_number, source, target, [a])
@@ -62,3 +63,36 @@ def to_fa(otatable, n):
     fa = FA("FA_"+str(n),rtw_alphabet,states,trans,initstate_name,accept_names)
     return fa
 
+def fa_to_ota(fa, sigma, n):
+    """Transform the finite automaton to an one-clock timed automaton as a hypothesis.
+    """
+    new_name = "H_" + str(n)
+    #sigma = [action for action in sigma]
+    states = [Location(state.name,state.init,state.accept,'q') for state in fa.states]
+    initstate_name = fa.initstate_name
+    accept_names = [name for name in fa.accept_names]
+    ### generate the transitions
+    trans = []
+    for s in fa.states:
+        s_dict = {}
+        for key in sigma:
+            s_dict[key] = []
+        for tran in fa.trans:
+            if tran.source == s.name:
+                s_dict[tran.label[0].action].extend([rtw.time for rtw in tran.label])
+        for tran in fa.trans:
+            if tran.source == s.name:
+                timepoints = [time for time in s_dict[tran.label[0].action]]
+                timepoints.sort()
+                for rtw in tran.label:
+                    index = timepoints.index(rtw.time)
+                    temp_constraint = None
+                    ## By now, we assuem that the timepoints are interger numbers.
+                    if index + 1 < len(timepoints):
+                        temp_constraint = Constraint("[" + str(rtw.time) + "," + str(timepoints[index+1]) + ")")
+                    else:
+                        temp_constraint = Constraint("[" + str(rtw.time) + "," + "+" + ")")
+                    temp_tran = OTATran(len(trans), tran.source, tran.label[0].action, [temp_constraint], rtw.reset, tran.target, 'q')
+                    trans.append(temp_tran)
+    ota = OTA(new_name,sigma,states,trans,initstate_name,accept_names)
+    return ota

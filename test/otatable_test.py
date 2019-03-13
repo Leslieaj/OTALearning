@@ -9,6 +9,7 @@ from hypothesis import *
 
 A, _ = buildOTA('../example.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
+max_time_value = AA.max_time_value()
 
 rtw1 = ResetTimedword('a',0,True)
 rtw2 = ResetTimedword('b',0,True)
@@ -67,7 +68,7 @@ class EquivalenceTest(unittest.TestCase):
         T2 = OTATable(S1,R2,E1)
         flag_closed, new_S, new_R, move = T2.is_closed()
         T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
-        T3.show()
+        #T3.show()
 
     def testToFA(self):
         S1 = [e0]
@@ -84,8 +85,42 @@ class EquivalenceTest(unittest.TestCase):
         flag_closed, new_S, new_R, move = T2.is_closed()
         T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
         #T3.show()
-        FA1 = to_fa(T3, 1)
-        FA1.show()
+        FA2 = to_fa(T3, 2)
+        #FA2.show()
+
+    def testFAToOTA(self):
+        S1 = [e0]
+        R1 = [e1,e2]
+        E1 = []
+        T1 = OTATable(S1,R1,E1)
+        #T1.show()
+        flag_closed, new_S, new_R, move = T1.is_closed()
+        self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
+
+        ctx1 = Element([ResetTimedword('a',1,False)],[1])
+        R2 = [e1,e2,ctx1]
+        T2 = OTATable(S1,R2,E1)
+        flag_closed, new_S, new_R, move = T2.is_closed()
+        T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
+        #T3.show()
+        FA2 = to_fa(T3, 2)
+        H2 = fa_to_ota(FA2, ["a","b"], 2)
+        #H2.show()
+
+    def test1(self):
+        S1 = [e0]
+        R1 = [e1,e2]
+        E1 = []
+        T1 = OTATable(S1,R1,E1)
+        FA1 = to_fa(T1, 1)
+        H1 = fa_to_ota(FA1, ["a","b"], 1)
+        H1.show()
+        flag1, w1 = ota_inclusion(max_time_value, H1, AA)
+        self.assertEqual(flag1, False)
+        rtws1 = findDelayRTWs(w1, 's', AA)
+        self.assertEqual(rtws1, [ResetTimedword('a',1,False)])
+        ctx1 = Element(rtws1, [1])
+        self.assertEqual(ctx1, Element([ResetTimedword('a',1,False)],[1]))
 
 if __name__ == "__main__":
     unittest.main()
