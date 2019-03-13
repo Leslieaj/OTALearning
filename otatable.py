@@ -152,7 +152,7 @@ class OTATable(object):
             print(r.tws, r.row())
         print("new_E:"+str(len(self.E)))
         for e in self.E:
-            print(e.tws)
+            print(e)
 
 def make_closed(new_S, new_R, move, table, sigma, ota):
     """The function makes the table closed, if the table is not closed.
@@ -172,6 +172,25 @@ def make_closed(new_S, new_R, move, table, sigma, ota):
                 closed_table.R.append(temp_element)
                 table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
     return closed_table
+
+def make_consistent(new_a, new_e_index, table, sigma, ota):
+    #flag, new_a, new_e_index = table.is_consistent()
+    #print flag
+    new_E = [tws for tws in table.E]
+    #new_E = copy.deepcopy(table.E)
+    new_e = [Timedword(tw.action,tw.time) for tw in new_a]
+    if new_e_index > 0:
+        e = table.E[new_e_index-1]
+        new_e.extend(e)
+    new_E.append(new_e)
+    new_S = [s for s in table.S]
+    new_R = [r for r in table.R]
+    for i in range(0, len(new_S)):
+        fill(new_S[i], new_E, ota)
+    for j in range(0, len(new_R)):
+        fill(new_R[j], new_E, ota)
+    consistent_table = OTATable(new_S, new_R, new_E)
+    return consistent_table
 
 def get_TW_delay_zero(tws, action, ota):
     """When move a timedwords tws from R to S, generate the new delay timedwords with reset information with delay 0.
@@ -202,8 +221,11 @@ def fill(element, E, ota):
     current_location_name = ota.run_resettimedwords(local_tws)
     for i in range(len(element.value)-1, len(E)):
         current_location = copy.deepcopy(current_location_name)
-        reset = element.tws[len(element.tws)-1].reset
-        clock_valuation = element.tws[len(element.tws)-1].time
+        reset = True
+        clock_valuation = 0
+        if len(element.tws) > 0:
+            reset = local_tws[len(local_tws)-1].reset
+            clock_valuation = local_tws[len(local_tws)-1].time
         for tw in E[i]:
             new_timedword = None
             if reset == False:
