@@ -81,7 +81,7 @@ class OTATable(object):
         if len(new_S) > len(self.S):
             return False, new_S, new_R, move
         else:
-            return True, new_S, new_R, move        
+            return True, new_S, new_R, move      
 
     def is_consistent(self):
         """Determine whether the table is consistent.
@@ -275,6 +275,16 @@ def fill(element, E, ota):
         else:
             element.value.append(0)
 
+# def fill(element, E, ota):
+#     if len(element.value) == 0:
+#         f = ota.is_accepted_reset(element.tws)
+#         element.value.append(f)
+#     #print len(element.value)-1, len(E)
+#     for i in range(len(element.value)-1, len(E)):
+#         temp_tws = element.tws + E[i]
+#         f = ota.is_accepted_reset(temp_tws)
+#         element.value.append(f)
+
 
 def prefixes(tws):
     """Return the prefixes of a timedwords. [tws1, tws2, tws3, ..., twsn]
@@ -313,6 +323,7 @@ def delete_prefix(tws, pref):
 def add_ctx(ctx, table, ota):
     """Given a counterexample ctx, add it and its prefixes to R (except those already present in S and R)
     """
+    #local_tws = dRTWs_to_lRTWs(ctx)
     pref = prefixes(ctx)
     S_tws = [s.tws for s in table.S]
     S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
