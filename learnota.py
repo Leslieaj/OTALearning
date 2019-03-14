@@ -10,10 +10,6 @@ def init_table(sigma, ota):
     S = [Element([],[])]
     R = []
     E = []
-    # for action in sigma:
-    #     new_tw = Timedword(action, 0)
-    #     new_element = Element([new_tw],[])
-    #     R.append(new_element)
     for s in S:
         if ota.initstate_name in ota.accept_names:
             s.value.append(1)
@@ -37,19 +33,19 @@ def init_table(sigma, ota):
     return T
 
 def main():
-    print("------------------A-----------------")
-#    paras = sys.argv
-#    A,_ = buildOTA(paras[1], 's')
-    A,_ = buildOTA("example.json", 's')
+    #print("------------------A-----------------")
+    paras = sys.argv
+    A,_ = buildOTA(paras[1], 's')
+    #A,_ = buildOTA("example.json", 's')
     #A.show()
-    print("------------------Assist-----------------")
+    #print("------------------Assist-----------------")
     AA = buildAssistantOTA(A, 's')
     #AA.show()
-    print("--------------max value---------------------")
+    #print("--------------max value---------------------")
     max_time_value = A.max_time_value()
-    print(max_time_value)
-    print("--------------all regions---------------------")
-    regions = get_regions(max_time_value)
+    #print(max_time_value)
+    #print("--------------all regions---------------------")
+    #regions = get_regions(max_time_value)
     # for r in regions:
     #     print(r.show())
     print("**************Start to learn ...*******************")
