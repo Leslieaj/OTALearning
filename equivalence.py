@@ -577,3 +577,28 @@ def equivalence_query(max_time_value, teacher, hypothesis):
 #         local_resettimedwords.append(ResetTimedword(drtw.action,current_clock_valuation,drtw.reset))
 #         reset = drtw.reset
 #     return local_resettimedwords
+
+def equivalence_main():
+    A, _ = buildOTA('example2.json', 's')
+    AA = buildAssistantOTA(A, 's')
+    max_time_value = AA.max_time_value()
+
+    # H, _ = buildOTA('example2_1.json', 'q')
+    # HH = buildAssistantOTA(H, 'q')
+
+    H, _ = buildOTA('example2_2.json', 'q')
+    HH = buildAssistantOTA(H, 'q')
+
+    AA.show()
+    print("------------------------------")
+    HH.show()
+
+    print("------------------------------")
+    flag, ctx = equivalence_query(max_time_value,AA,HH)
+    print(flag)
+    print("------------------------------")
+    print(ctx.show())
+
+
+if __name__=='__main__':
+	equivalence_main()

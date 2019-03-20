@@ -24,6 +24,8 @@ def init_table(sigma, ota):
                 new_value = []
                 if tran.target in ota.accept_names:
                     new_value = [1]
+                elif tran.target == ota.sink_name:
+                    new_value = [-1]
                 else:
                     new_value = [0]
                 new_element = Element([new_rtw], new_value)

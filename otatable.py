@@ -228,7 +228,8 @@ def get_TW_delay_zero(tws, action, ota):
     """When move a timedwords tws from R to S, generate the new delay timedwords with reset information with delay 0.
     """
     new_timedword = None
-    local_tws = dRTWs_to_lRTWs(tws)
+    #local_tws = dRTWs_to_lRTWs(tws)
+    local_tws = tws
     if tws[len(local_tws)-1].reset == False:
         new_timedword = Timedword(action,tws[len(local_tws)-1].time)
     else:
@@ -237,9 +238,9 @@ def get_TW_delay_zero(tws, action, ota):
     new_resettimedword = None
     for otatran in ota.trans:
         if otatran.source == source_location_name and otatran.is_pass(new_timedword):
-            #new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
+            new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
             # return the delay timed words with reset information
-            new_resettimedword = ResetTimedword(action,0,otatran.reset)
+            #new_resettimedword = ResetTimedword(action,0,otatran.reset)
             break
     return new_resettimedword
 

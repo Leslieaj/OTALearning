@@ -12,12 +12,14 @@ class Location(object):
         "init" for indicating the initial state;
         "accept" for indicating accepting states;
         "flag" for indicating the OTA
+        "sink" for indicating the location whether it is the sink state.
     """
-    def __init__(self, name="", init=False, accept=False, flag='s'):
+    def __init__(self, name="", init=False, accept=False, flag='s', sink=False):
         self.name = name
         self.init = init
         self.accept = accept
         self.flag = flag
+        self.sink = sink
 
     def __eq__(self, location):
         if self.name == location.name and self.init == location.init and self.accept == location.accept and self.flag == location.flag:
@@ -35,7 +37,7 @@ class Location(object):
         return self.flag+'_'+self.name
 
     def show(self):
-        return self.get_flagname() + ',' + str(self.init) + ',' + str(self.accept)
+        return self.get_flagname() + ',' + str(self.init) + ',' + str(self.accept) + ',' + str(self.sink)
 
 class State(object):
     """
@@ -131,6 +133,7 @@ class OTA(object):
         self.trans = trans or []
         self.initstate_name = init
         self.accept_names = accepts or []
+        self.sink_name = ""
     
     def max_time_value(self):
         """
@@ -237,7 +240,7 @@ class OTA(object):
         print(self.name)
         print("sigma and length of sigma: ")
         print(self.sigma, len(self.sigma))
-        print("Location (name, init, accept) :")
+        print("Location (name, init, accept, sink) :")
         for l in self.locations:
             print(l.show())
         print("transitions (id, source_state, label, target_state, constraints, reset): ")
@@ -248,6 +251,8 @@ class OTA(object):
         print(self.initstate_name)
         print("accept states: ")
         print(self.accept_names)
+        print("sink states: ")
+        print(self.sink_name)
 
 class Timedword(object):
     """The definition of timedword without resetting information.
@@ -313,6 +318,21 @@ def dRTWs_to_lRTWs(delay_resettimedwords):
         reset = drtw.reset
     return local_resettimedwords
 
+def is_valid_rtws(rtws):
+    """Given a clock-valuation timedwords with reset-info, determin its validation.
+    """
+    if len(rtws) == 0 or len(rtws) == 1:
+        return True
+    current_clock_valuation = rtws[0].time
+    reset = rtws[0].reset
+    for rtw in rtws[1:]:
+        if reset == False and rtw.time < current_clock_valuation:
+            return False
+        else:
+            reset = rtw.reset
+            current_clock_valuation = rtw.time
+    return True
+
 def buildOTA(jsonfile, otaflag):
     """
         build the teacher OTA from a json file.
@@ -360,7 +380,7 @@ def buildAssistantOTA(ota, otaflag):
     """
     location_number = len(ota.locations)
     tran_number = len(ota.trans)
-    new_location = Location(str(location_number+1), False, False, otaflag)
+    new_location = Location(str(location_number+1), False, False, otaflag, True)
     #flag = False
     new_trans = []
     for l in ota.locations:
@@ -400,7 +420,9 @@ def buildAssistantOTA(ota, otaflag):
             temp_tran = OTATran(tran_number, new_location.name, label, constraints, reset, new_location.name, otaflag)
             tran_number = tran_number+1
             assist_trans.append(temp_tran)
-    return OTA(assist_name, ota.sigma, assist_locations, assist_trans, assist_init, assist_accepts)
+    assist_ota = OTA(assist_name, ota.sigma, assist_locations, assist_trans, assist_init, assist_accepts)
+    assist_ota.sink_name = new_location.name
+    return assist_ota
 
 # def main():
 #     print("------------------A-----------------")
