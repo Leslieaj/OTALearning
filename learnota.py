@@ -61,7 +61,6 @@ def main():
     start = time.time()
     equivalent = False
     table = copy.deepcopy(T1)
-    t_number = 0
     eq_number = 0
     target = None
     while equivalent == False:
@@ -92,8 +91,8 @@ def main():
                 table.show()
                 print("--------------------------------------------------")
             prepared = table.is_prepared(AA)
-        fa = to_fa(table, t_number)
-        h = fa_to_ota(fa,sigma,t_number)
+        fa, sink_name = to_fa(table, t_number)
+        h = fa_to_ota(fa, sink_name, sigma, t_number)
         target = copy.deepcopy(h)
         equivalent, ctx = equivalence_query(max_time_value,AA,h)
         eq_number = eq_number + 1
@@ -110,7 +109,7 @@ def main():
         print("*******************Failed .***********************")
     else:
         print("Succeed! The learned OTA is as follows.")
-        print()
+        print("---------------------------------------------------")
         target.show()
         print("---------------------------------------------------")
         # print("Total time of learning: " + str(end-start))
@@ -121,8 +120,8 @@ def main():
         # print()
         # refine_rta_trans(target)
         # target.show()
-        print("---------------------------------------------------")
         print("Total time: " + str(end-start))
+        print("---------------------------------------------------")
         print("The element number of S in the last table: " + str(len(table.S)))
         print("The element number of R in the last table: " + str(len(table.R)))
         print("The element number of E in the last table (excluding the empty-word): " + str(len(table.E)))

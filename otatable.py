@@ -130,10 +130,11 @@ class OTATable(object):
         table_tws = [s.tws for s in self.S] + [r.tws for r in self.R]
         new_added = []
         for s in self.S:
+            #local_s = dRTWs_to_lRTWs(s.tws)
+            local_s = s.tws
+            current_location_name = ota.run_resettimedwords(local_s)
             for e in self.E:
                 temp_e = []
-                local_s = dRTWs_to_lRTWs(s.tws)
-                current_location_name = ota.run_resettimedwords(local_s)
                 current_location = copy.deepcopy(current_location_name)
                 reset = True
                 clock_valuation = 0
@@ -141,19 +142,20 @@ class OTATable(object):
                     reset = local_s[len(local_s)-1].reset
                     clock_valuation = local_s[len(local_s)-1].time
                 for tw in e:
-                    new_timedword = None
-                    if reset == False:
-                        new_timedword = Timedword(tw.action, clock_valuation+tw.time)
+                    new_timedword = Timedword(tw.action,tw.time)
+                    if reset == False and new_timedword.time < clock_valuation:
+                        temp_e.append(ResetTimedword(tw.action,tw.time,True))
+                        current_location = ota.sink_name
+                        clock_valuation = 0
                     else:
-                        new_timedword = Timedword(tw.action,tw.time)
-                    for otatran in ota.trans:
-                        if otatran.source == current_location and otatran.is_pass(new_timedword):
-                            delay_resettimedword = ResetTimedword(tw.action,tw.time,otatran.reset)
-                            temp_e.append(delay_resettimedword)
-                            reset = otatran.reset
-                            clock_valuation = new_timedword.time
-                            current_location = otatran.target
-                            break
+                        for otatran in ota.trans:
+                            if otatran.source == current_location and otatran.is_pass(new_timedword):
+                                new_resettimedword = ResetTimedword(tw.action,tw.time,otatran.reset)
+                                temp_e.append(new_resettimedword)
+                                reset = otatran.reset
+                                clock_valuation = new_timedword.time
+                                current_location = otatran.target
+                                break
                 temp_se = [rtw for rtw in s.tws] + [rtw for rtw in temp_e]
                 prefs = prefixes(temp_se)
                 for pref in prefs:
@@ -187,10 +189,11 @@ def make_closed(new_S, new_R, move, table, sigma, ota):
     for s in move:
         s_tws = [tw for tw in s.tws]
         for action in sigma:
-            new_tw = get_TW_delay_zero(s_tws, action, ota)
+            #new_tw = get_TW_delay_zero(s_tws, action, ota)
+            new_tw, value = new_rtw_in_closed(s_tws,action,ota)
             temp_tws = s_tws+[new_tw]
             if temp_tws not in table_tws:
-                temp_element = Element(temp_tws,[])
+                temp_element = Element(temp_tws,[value])
                 fill(temp_element, closed_table.E, ota)
                 closed_table.R.append(temp_element)
                 table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
@@ -244,37 +247,78 @@ def get_TW_delay_zero(tws, action, ota):
             break
     return new_resettimedword
 
+def new_rtw_in_closed(tws, action, ota):
+    if is_valid_rtws(tws) == False:
+        return ResetTimedword(action,0,True), -1
+    else:
+        current_statename = ota.run_resettimedwords(tws)
+        current_clock_valuation = 0
+        reset = True
+        if len(tws) > 0:
+            current_clock_valuation = tws[-1].time
+            reset = tws[-1].reset
+        if current_statename == ota.sink_name:
+            return ResetTimedword(action,0,True), -1
+        if reset == False and current_clock_valuation > 0:
+            return ResetTimedword(action,0,True), -1
+        else:
+            flag = False
+            for tran in ota.trans:
+                if tran.source == current_statename and tran.is_pass(Timedword(action,0)):
+                    flag = True
+                    current_statename = tran.target
+                    new_rtw = ResetTimedword(action,0,tran.reset)
+                    if current_statename == ota.sink_name:
+                        return new_rtw, -1
+                    elif current_statename in ota.accept_names:
+                        return new_rtw, 1
+                    else:
+                        return new_rtw, 0
+            if flag == False:
+                raise NotImplementedError("new_rtw_in_closed: an unhandle timedword "+Timedword(action,0).show())
+
 def fill(element, E, ota):
     """Fill an element in S U R.
     """
-    local_tws = dRTWs_to_lRTWs(element.tws)
+    #local_tws = dRTWs_to_lRTWs(element.tws)
+    local_tws = element.tws
+    current_location_name = ota.run_resettimedwords(local_tws)
     if len(element.value) == 0:
         f = ota.is_accepted_reset(local_tws)
         element.value.append(f)
-    current_location_name = ota.run_resettimedwords(local_tws)
-    for i in range(len(element.value)-1, len(E)):
-        current_location = copy.deepcopy(current_location_name)
-        reset = True
-        clock_valuation = 0
-        if len(element.tws) > 0:
-            reset = local_tws[len(local_tws)-1].reset
-            clock_valuation = local_tws[len(local_tws)-1].time
-        for tw in E[i]:
-            new_timedword = None
-            if reset == False:
-                new_timedword = Timedword(tw.action, clock_valuation+tw.time)
+    if current_location_name == ota.sink_name:
+        for i in range(len(element.value)-1, len(E)):
+            element.value.append(-1)
+    else:
+        for i in range(len(element.value)-1, len(E)):
+            current_location = copy.deepcopy(current_location_name)
+            reset = True
+            clock_valuation = 0
+            if len(element.tws) > 0:
+                reset = local_tws[len(local_tws)-1].reset
+                clock_valuation = local_tws[len(local_tws)-1].time
+            for tw in E[i]:
+                if reset == False and tw.time < clock_valuation:
+                    element.value.append(-1)
+                else:
+                    flag = False
+                    for otatran in ota.trans:
+                        if otatran.source == current_location and otatran.is_pass(tw):
+                            reset = otatran.reset
+                            clock_valuation = tw.time
+                            current_location = otatran.target
+                            flag = True
+                            break
+                    if flag == False:
+                        raise NotImplementedError("fill")
+                    else:
+                        pass
+            if current_location in ota.accept_names:
+                element.value.append(1)
+            elif current_location == ota.sink_name:
+                element.value.append(-1)
             else:
-                new_timedword = Timedword(tw.action,tw.time)
-            for otatran in ota.trans:
-                if otatran.source == current_location and otatran.is_pass(new_timedword):
-                    reset = otatran.reset
-                    clock_valuation = new_timedword.time
-                    current_location = otatran.target
-                    break
-        if current_location in ota.accept_names:
-            element.value.append(1)
-        else:
-            element.value.append(0)
+                element.value.append(0)
 
 # def fill(element, E, ota):
 #     if len(element.value) == 0:
@@ -324,8 +368,8 @@ def delete_prefix(tws, pref):
 def add_ctx(ctx, table, ota):
     """Given a counterexample ctx, add it and its prefixes to R (except those already present in S and R)
     """
-    #local_tws = dRTWs_to_lRTWs(ctx)
-    pref = prefixes(ctx)
+    local_tws = dRTWs_to_lRTWs(ctx)
+    pref = prefixes(local_tws)
     S_tws = [s.tws for s in table.S]
     S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
     new_S = [s for s in table.S]

@@ -192,29 +192,37 @@ class OTA(object):
             else:
                 return 0
     
+    # def is_accepted_reset(self, tws):
+    #     """Determine whether the OTA accepts a reset timed words or not.
+    #     """
+    #     if len(tws) == 0:
+    #         if self.initstate_name in self.accept_names:
+    #             return 1
+    #         else:
+    #             return 0
+    #     else:
+    #         current_statename = self.initstate_name
+    #         for tw in tws:
+    #             flag = False
+    #             for tran in self.trans:
+    #                 if tran.source == current_statename and tran.is_pass_reset(tw):
+    #                     current_statename = tran.target
+    #                     flag = True
+    #                     break
+    #             if flag == False:
+    #                 return -1
+    #         if current_statename in self.accept_names:
+    #             return 1
+    #         else:
+    #             return 0
     def is_accepted_reset(self, tws):
-        """Determine whether the OTA accepts a reset timed words or not.
-        """
-        if len(tws) == 0:
-            if self.initstate_name in self.accept_names:
-                return 1
-            else:
-                return 0
+        current_statename = self.run_resettimedwords(tws)
+        if current_statename == self.sink_name:
+            return -1
+        elif current_statename in self.accept_names:
+            return 1
         else:
-            current_statename = self.initstate_name
-            for tw in tws:
-                flag = False
-                for tran in self.trans:
-                    if tran.source == current_statename and tran.is_pass_reset(tw):
-                        current_statename = tran.target
-                        flag = True
-                        break
-                if flag == False:
-                    return -1
-            if current_statename in self.accept_names:
-                return 1
-            else:
-                return 0
+            return 0
 
     def run_resettimedwords(self,tws):
         """Run a resettimedwords, return the final location.
@@ -224,17 +232,26 @@ class OTA(object):
             return self.initstate_name
         else:
             current_statename = self.initstate_name
+            current_clock_valuation = 0
+            reset = True
             for tw in tws:
-                flag = False
-                for tran in self.trans:
-                    if tran.source == current_statename and tran.is_pass_reset(tw):
-                        current_statename = tran.target
-                        flag = True
-                        break
-                if flag == False:
-                    return -1
+                if reset == False and tw.time < current_clock_valuation:
+                    return self.sink_name
+                else:
+                    flag = False
+                    for tran in self.trans:
+                        if tran.source == current_statename and tran.is_pass_reset(tw):
+                            current_statename = tran.target
+                            current_clock_valuation = tw.time
+                            reset = tw.reset
+                            flag = True
+                            break
+                    if flag == False:
+                        raise NotImplementedError("run_resettimedwords: an unhandle resettimedword!")
+                    else:
+                        pass
             return current_statename
-    
+
     def show(self):
         print("OTA name: ")
         print(self.name)

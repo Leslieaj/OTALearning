@@ -552,13 +552,13 @@ def equivalence_query(max_time_value, teacher, hypothesis):
     flag_pos, w_pos = ota_inclusion(max_time_value, hypothesis, teacher)
     if flag_pos == False:
         drtw_pos = findDelayRTWs(w_pos, 's', teacher)
-        ctx_pos = Element(drtw_pos, [1])
+        ctx_pos = Element(drtw_pos, [])
         return False, ctx_pos
     else:
         flag_neg, w_neg = ota_inclusion(max_time_value, teacher, hypothesis)
         if flag_neg == False:
             drtw_neg = findDelayRTWs(w_neg, 's', teacher)
-            ctx_neg = Element(drtw_neg, [0])
+            ctx_neg = Element(drtw_neg, [])
             return False, ctx_neg
         else:
             return True, None

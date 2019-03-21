@@ -7,8 +7,9 @@ def to_fa(otatable, n):
     """
     ### First, need to transform the resettimedwords of the elements in S_U_R 
     ### to clock valuation timedwords with reset informations.
-    S_U_R = [s for s in otatable.S] + [r for r in otatable.R]
-    table_elements = [Element(dRTWs_to_lRTWs(e.tws), e.value) for e in S_U_R]
+    #S_U_R = [s for s in otatable.S] + [r for r in otatable.R]
+    #table_elements = [Element(dRTWs_to_lRTWs(e.tws), e.value) for e in S_U_R]
+    table_elements = [s for s in otatable.S] + [r for r in otatable.R]
     ### build a finite automaton
     ## FAStates
     rtw_alphabet = []
@@ -16,6 +17,7 @@ def to_fa(otatable, n):
     initstate_name = ""
     accept_names = []
     value_name_dict = {}
+    sink_name = ""
     for s,i in zip(otatable.S, range(1, len(otatable.S)+1)):
         name = str(i)
         value_name_dict[s.whichstate()] = name
@@ -27,6 +29,8 @@ def to_fa(otatable, n):
         if s.value[0] == 1:
             accept = True
             accept_names.append(name)
+        if s.value[0] == -1:
+            sink_name = name
         temp_state = FAState(name, init, accept)
         states.append(temp_state)
     ## FATrans
@@ -55,15 +59,15 @@ def to_fa(otatable, n):
                     need_newtran = False
                     if a not in tran.label:
                         tran.label.append(a)
-                break
+                    break
         if need_newtran == True:
             temp_tran = FATran(trans_number, source, target, [a])
             trans.append(temp_tran)
             trans_number = trans_number + 1
     fa = FA("FA_"+str(n),rtw_alphabet,states,trans,initstate_name,accept_names)
-    return fa
+    return fa , sink_name
 
-def fa_to_ota(fa, sigma, n):
+def fa_to_ota(fa, sink_name, sigma, n):
     """Transform the finite automaton to an one-clock timed automaton as a hypothesis.
     """
     new_name = "H_" + str(n)
@@ -71,6 +75,9 @@ def fa_to_ota(fa, sigma, n):
     states = [Location(state.name,state.init,state.accept,'q') for state in fa.states]
     initstate_name = fa.initstate_name
     accept_names = [name for name in fa.accept_names]
+    for l in states:
+        if l.name == sink_name:
+            l.sink = True
     ### generate the transitions
     trans = []
     for s in fa.states:
@@ -95,4 +102,5 @@ def fa_to_ota(fa, sigma, n):
                     temp_tran = OTATran(len(trans), tran.source, tran.label[0].action, [temp_constraint], rtw.reset, tran.target, 'q')
                     trans.append(temp_tran)
     ota = OTA(new_name,sigma,states,trans,initstate_name,accept_names)
+    ota.sink_name = sink_name
     return ota
