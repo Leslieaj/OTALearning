@@ -365,10 +365,35 @@ def delete_prefix(tws, pref):
         new_tws = tws[len(pref):]
         return new_tws
 
+def fix_resets(ctx, ota):
+    #print(ctx)
+    new_tws = [Timedword(rtw.action,rtw.time) for rtw in ctx]
+    #print(new_tws)
+    dRTWs = []
+    current_location = ota.initstate_name
+    current_clock_valuation = 0
+    reset = True
+    for tw in new_tws:
+        if reset == False:
+            current_clock_valuation = current_clock_valuation + tw.time
+        else:
+            current_clock_valuation = tw.time
+        for tran in ota.trans:
+            if tran.source == current_location and tran.is_pass(Timedword(tw.action,current_clock_valuation)):
+                dRTWs.append(ResetTimedword(tw.action,tw.time,tran.reset))
+                current_location = tran.target
+                reset = tran.reset
+                break
+    return dRTWs
+
 def add_ctx(ctx, table, ota):
     """Given a counterexample ctx, add it and its prefixes to R (except those already present in S and R)
     """
-    local_tws = dRTWs_to_lRTWs(ctx)
+    #print(ctx)
+    #print(fix_resets(ctx,ota))
+    local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
+    print(local_tws)
+    #local_tws = dRTWs_to_lRTWs(ctx)
     pref = prefixes(local_tws)
     S_tws = [s.tws for s in table.S]
     S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]

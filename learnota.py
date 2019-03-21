@@ -92,9 +92,15 @@ def main():
                 print("--------------------------------------------------")
             prepared = table.is_prepared(AA)
         fa, sink_name = to_fa(table, t_number)
+        #print("---------------------------------------------")
+        fa.show()
+        #print("---------------------------------------------")
         h = fa_to_ota(fa, sink_name, sigma, t_number)
+        #h.show()
+        print("---------------------------------------------")
         target = copy.deepcopy(h)
         equivalent, ctx = equivalence_query(max_time_value,AA,h)
+        #print(ctx.show())
         eq_number = eq_number + 1
         if equivalent == False:
             temp = add_ctx(ctx.tws,table,AA)

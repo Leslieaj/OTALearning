@@ -546,18 +546,42 @@ def findDelayRTWs(letterword, flag, ota):
             raise NotImplementedError()
     return delay_resettimedwords
 
+def dTWs_to_dRTWs(letterword,flag, ota):
+    tws = findDelayTimedwords(letterword,flag,ota.sigma)
+    dRTWs = []
+    if len(tws) == 0:
+        return []
+    else:
+        current_location = ota.initstate_name
+        current_clock_valuation = 0
+        reset = True
+        for tw in tws:
+            if reset == False:
+                current_clock_valuation = current_clock_valuation + tw.time
+            else:
+                current_clock_valuation = tw.time
+            for tran in ota.trans:
+                if tran.source == current_location and tran.is_pass(Timedword(tw.action,current_clock_valuation)):
+                    dRTWs.append(ResetTimedword(tw.action,tw.time,tran.reset))
+                    reset = tran.reset
+                    break
+    return dRTWs
+
+
 def equivalence_query(max_time_value, teacher, hypothesis):
     """
     """
     flag_pos, w_pos = ota_inclusion(max_time_value, hypothesis, teacher)
     if flag_pos == False:
-        drtw_pos = findDelayRTWs(w_pos, 's', teacher)
+        #drtw_pos = findDelayRTWs(w_pos, 's', teacher)
+        drtw_pos = dTWs_to_dRTWs(w_pos, 's', teacher)
         ctx_pos = Element(drtw_pos, [])
         return False, ctx_pos
     else:
         flag_neg, w_neg = ota_inclusion(max_time_value, teacher, hypothesis)
         if flag_neg == False:
-            drtw_neg = findDelayRTWs(w_neg, 's', teacher)
+            #drtw_neg = findDelayRTWs(w_neg, 's', teacher)
+            drtw_neg = dTWs_to_dRTWs(w_neg, 's', teacher)
             ctx_neg = Element(drtw_neg, [])
             return False, ctx_neg
         else:
@@ -579,25 +603,43 @@ def equivalence_query(max_time_value, teacher, hypothesis):
 #     return local_resettimedwords
 
 def equivalence_main():
-    A, _ = buildOTA('example2.json', 's')
+    A, _ = buildOTA('example3.json', 's')
     AA = buildAssistantOTA(A, 's')
     max_time_value = AA.max_time_value()
 
     # H, _ = buildOTA('example2_1.json', 'q')
     # HH = buildAssistantOTA(H, 'q')
 
-    H, _ = buildOTA('example2_2.json', 'q')
+    H, _ = buildOTA('example3_1.json', 'q')
     HH = buildAssistantOTA(H, 'q')
 
     AA.show()
     print("------------------------------")
     HH.show()
 
-    print("------------------------------")
     flag, ctx = equivalence_query(max_time_value,AA,HH)
     print(flag)
     print("------------------------------")
     print(ctx.show())
+
+    print("------------------------------")
+    flag_pos, w_pos = ota_inclusion(max_time_value, HH, AA)
+    print(flag_pos)
+    print(w_pos.show())
+    print("--------------------------------------------")
+    path1 = findpath(w_pos,'s',AA.sigma)
+    for lw in path1:
+        print(lw.show(),lw.action)
+    print("----------------------------------------------")
+    dtw = findDelayTimedwords(w_pos,'s',AA.sigma)
+    print(dtw)
+    print("----------------------------------------------")
+    drtw = dTWs_to_dRTWs(w_pos,'s',AA)
+    print(drtw)
+    #flag, ctx = equivalence_query(max_time_value,AA,HH)
+    #print(flag)
+    print("------------------------------")
+    #print(ctx.show())
 
 
 if __name__=='__main__':
