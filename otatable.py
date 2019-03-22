@@ -49,8 +49,9 @@ class OTATable(object):
     def is_prepared(self, ota):
         flag_closed, new_S, new_R, move = self.is_closed()
         flag_consistent, new_a, new_e_index = self.is_consistent()
-        #flag_evid_closed, new_added = self.is_evidence_closed(ota)
-        if flag_closed == True and flag_consistent == True: #and flag_evid_closed == True:
+        flag_evid_closed, new_added = self.is_evidence_closed(ota)
+        #if flag_closed == True and flag_consistent == True: #and flag_evid_closed == True:
+        if flag_closed == True and flag_consistent == True and flag_evid_closed == True:
             return True
         else:
             return False
@@ -147,13 +148,16 @@ class OTATable(object):
                         temp_e.append(ResetTimedword(tw.action,tw.time,True))
                         current_location = ota.sink_name
                         clock_valuation = 0
+                        break
                     else:
                         for otatran in ota.trans:
                             if otatran.source == current_location and otatran.is_pass(new_timedword):
                                 new_resettimedword = ResetTimedword(tw.action,tw.time,otatran.reset)
                                 temp_e.append(new_resettimedword)
-                                reset = otatran.reset
                                 clock_valuation = new_timedword.time
+                                reset = otatran.reset
+                                if reset == True:
+                                    clock_valuation = 0
                                 current_location = otatran.target
                                 break
                 temp_se = [rtw for rtw in s.tws] + [rtw for rtw in temp_e]
@@ -161,7 +165,8 @@ class OTATable(object):
                 for pref in prefs:
                     if pref not in table_tws:
                         table_tws.append(pref)
-                        new_tws = temp_se
+                        #table_tws = [tws for tws in table_tws] + [pref]
+                        new_tws = [tws for tws in pref]
                         new_element = Element(new_tws,[])
                         new_added.append(new_element)
         if len(new_added) > 0:
@@ -297,6 +302,8 @@ def fill(element, E, ota):
             if len(element.tws) > 0:
                 reset = local_tws[len(local_tws)-1].reset
                 clock_valuation = local_tws[len(local_tws)-1].time
+                if reset == True:
+                    clock_valuation = 0
             for tw in E[i]:
                 if reset == False and tw.time < clock_valuation:
                     #element.value.append(-1)
@@ -310,6 +317,8 @@ def fill(element, E, ota):
                         if otatran.source == current_location and otatran.is_pass(tw):
                             reset = otatran.reset
                             clock_valuation = tw.time
+                            if reset == True:
+                                clock_valuation = 0
                             current_location = otatran.target
                             flag = True
                             break

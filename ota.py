@@ -244,6 +244,8 @@ class OTA(object):
                             current_statename = tran.target
                             current_clock_valuation = tw.time
                             reset = tw.reset
+                            if reset == True:
+                                current_clock_valuation = 0
                             flag = True
                             break
                     if flag == False:
