@@ -1,38 +1,12 @@
 #The main file
 import sys
 import time
+import copy
 
-from hypothesis import *
-from equivalence import *
-
-
-def init_table(sigma, ota):
-    S = [Element([],[])]
-    R = []
-    E = []
-    for s in S:
-        if ota.initstate_name in ota.accept_names:
-            s.value.append(1)
-        else:
-            s.value.append(0)
-    for action in sigma:
-        new_tw = Timedword(action, 0)
-        new_element = None
-        for tran in ota.trans:
-            if tran.source == ota.initstate_name and tran.is_pass(new_tw):
-                new_rtw = ResetTimedword(new_tw.action,new_tw.time,tran.reset)
-                new_value = []
-                if tran.target in ota.accept_names:
-                    new_value = [1]
-                elif tran.target == ota.sink_name:
-                    new_value = [-1]
-                else:
-                    new_value = [0]
-                new_element = Element([new_rtw], new_value)
-                R.append(new_element)
-                break
-    T = OTATable(S, R, E)
-    return T
+from ota import buildOTA, buildAssistantOTA
+from otatable import init_table, add_ctx, make_closed, make_consistent, make_evidence_closed
+from hypothesis import to_fa, fa_to_ota
+from equivalence import equivalence_query
 
 def main():
     #print("------------------A-----------------")
@@ -97,7 +71,7 @@ def main():
         #print("---------------------------------------------")
         h = fa_to_ota(fa, sink_name, sigma, t_number)
         #h.show()
-        print("---------------------------------------------")
+        #print("---------------------------------------------")
         target = copy.deepcopy(h)
         equivalent, ctx = equivalence_query(max_time_value,AA,h)
         #print(ctx.show())

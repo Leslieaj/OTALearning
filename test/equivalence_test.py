@@ -27,7 +27,7 @@ Ac = [s1,s2,s3,s4,s5]
 Bstate = q2
 Ac2 = [s1,s2,s4]
 
-A, _ = buildOTA('../a.json', 's')
+A, _ = buildOTA('a.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 max_time_value = AA.max_time_value()
 regions = get_regions(max_time_value)
@@ -37,13 +37,13 @@ letter2 = state_to_letter(s2, max_time_value)  # s_1,(0,1)
 letter3 = state_to_letter(s3, max_time_value)  # s_1,(1,2)
 letter5 = state_to_letter(s5, max_time_value)  # s_2,[1,1]
 
-B, _ = buildOTA('../b.json', 'q')
+B, _ = buildOTA('b.json', 'q')
 BB = buildAssistantOTA(B, 'q')
-C, _ = buildOTA('../c.json', 'q')
+C, _ = buildOTA('c.json', 'q')
 CC = buildAssistantOTA(C, 'q')
-D, _ = buildOTA('../d.json', 'q')
+D, _ = buildOTA('d.json', 'q')
 DD = buildAssistantOTA(D, 'q')
-E, _ = buildOTA('../e.json', 'q')
+E, _ = buildOTA('e.json', 'q')
 EE = buildAssistantOTA(E, 'q')
 
 class EquivalenceTest(unittest.TestCase):
@@ -290,15 +290,15 @@ class EquivalenceTest(unittest.TestCase):
         self.assertEqual(ota_inclusion(max_time_value, AA, DD)[0], False)
         self.assertEqual(ota_inclusion(max_time_value, EE, AA)[0], True)
         self.assertEqual(ota_inclusion(max_time_value, AA, EE)[0], False)
-        ota1, _ = buildOTA('../test.json', 'q')
+        ota1, _ = buildOTA('test.json', 'q')
         c_ota1 = buildAssistantOTA(ota1, 'q')
         self.assertEqual(ota_inclusion(max_time_value, AA, c_ota1)[0], True)
         self.assertEqual(ota_inclusion(max_time_value, c_ota1, AA)[0], False)
     
     def testFindDelayTimedwords(self):
-        ota1, _ = buildOTA('../test.json', 'q')
+        ota1, _ = buildOTA('test.json', 'q')
         c_ota1 = buildAssistantOTA(ota1, 'q')
-        teacher, _ = buildOTA('../example.json', 's')
+        teacher, _ = buildOTA('example.json', 's')
         c_teacher = buildAssistantOTA(teacher, 's')
         flag1, w1 = ota_inclusion(max_time_value, c_ota1, c_teacher)
         delay_timedwords1 = findDelayTimedwords(w1, 's', c_teacher.sigma)

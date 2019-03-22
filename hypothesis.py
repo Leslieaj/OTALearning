@@ -1,6 +1,7 @@
-from fa import *
-from otatable import *
-
+from fa import FAState, FATran, FA
+from interval import Constraint
+from ota import Location, OTA, OTATran
+#from otatable import *
 
 def to_fa(otatable, n):
     """Given an ota table, build a finite automaton.

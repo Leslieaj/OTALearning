@@ -3,12 +3,13 @@
 import unittest
 import sys
 sys.path.append('../')
-#from otatable import *
+from ota import *
+from otatable import *
 from equivalence import *
 from hypothesis import *
 from learnota import init_table
 
-A, _ = buildOTA('../example.json', 's')
+A, _ = buildOTA('example.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 max_time_value = AA.max_time_value()
 
@@ -130,7 +131,7 @@ class EquivalenceTest(unittest.TestCase):
     #     #H2.show()
 
     def test1(self):
-        A, _ = buildOTA('../example2.json', 's')
+        A, _ = buildOTA('example2.json', 's')
         AA = buildAssistantOTA(A, 's')  # Assist
         max_time_value = AA.max_time_value()
         sigma = AA.sigma

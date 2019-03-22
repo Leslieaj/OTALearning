@@ -17,16 +17,16 @@ Q4 = Location("4", False, False, 'q')
 s1 = State(L1, 0.0)
 s2 = State(L1, 0.3)
 
-A, _ = buildOTA('../a.json', 's')
+A, _ = buildOTA('a.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 
 class EquivalenceTest(unittest.TestCase):
     def testLocation(self):
-        self.assertEqual(L1.show(), "s_1,True,False")
+        self.assertEqual(L1.show(), "s_1,True,False,False")
         self.assertEqual(L1.get_name(), "1")
         self.assertEqual(type(L1.get_name()), str)
-        self.assertEqual(L2.show(), "s_2,False,False")
-        self.assertEqual(Q3.show(), "q_3,False,True")
+        self.assertEqual(L2.show(), "s_2,False,False,False")
+        self.assertEqual(Q3.show(), "q_3,False,True,False")
 
     def testState(self):
         self.assertEqual(s1.show(), "(s_1,0.0)")
@@ -87,7 +87,7 @@ class EquivalenceTest(unittest.TestCase):
         #print(rtw1)
 
     def testcase1(self):
-        ota1, _ = buildOTA('../test.json', 's')
+        ota1, _ = buildOTA('test.json', 's')
         c_ota1 = buildAssistantOTA(ota1, 's')
         c_ota1.show()
 

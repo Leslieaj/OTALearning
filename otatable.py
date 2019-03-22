@@ -1,7 +1,7 @@
 # The definitions on the OTA observation table.
 
 import copy
-from ota import *
+from ota import Timedword, ResetTimedword, is_valid_rtws, dRTWs_to_lRTWs
 #from fa import *
 
 class Element(object):
@@ -426,3 +426,31 @@ def add_ctx(ctx, table, ota):
             fill(temp_element, new_E, ota)
             new_R.append(temp_element)
     return OTATable(new_S, new_R, new_E)
+
+def init_table(sigma, ota):
+    S = [Element([],[])]
+    R = []
+    E = []
+    for s in S:
+        if ota.initstate_name in ota.accept_names:
+            s.value.append(1)
+        else:
+            s.value.append(0)
+    for action in sigma:
+        new_tw = Timedword(action, 0)
+        new_element = None
+        for tran in ota.trans:
+            if tran.source == ota.initstate_name and tran.is_pass(new_tw):
+                new_rtw = ResetTimedword(new_tw.action,new_tw.time,tran.reset)
+                new_value = []
+                if tran.target in ota.accept_names:
+                    new_value = [1]
+                elif tran.target == ota.sink_name:
+                    new_value = [-1]
+                else:
+                    new_value = [0]
+                new_element = Element([new_rtw], new_value)
+                R.append(new_element)
+                break
+    T = OTATable(S, R, E)
+    return T
