@@ -49,8 +49,8 @@ class OTATable(object):
     def is_prepared(self, ota):
         flag_closed, new_S, new_R, move = self.is_closed()
         flag_consistent, new_a, new_e_index = self.is_consistent()
-        flag_evid_closed, new_added = self.is_evidence_closed(ota)
-        if flag_closed == True and flag_consistent == True and flag_evid_closed == True:
+        #flag_evid_closed, new_added = self.is_evidence_closed(ota)
+        if flag_closed == True and flag_consistent == True: #and flag_evid_closed == True:
             return True
         else:
             return False
@@ -299,7 +299,11 @@ def fill(element, E, ota):
                 clock_valuation = local_tws[len(local_tws)-1].time
             for tw in E[i]:
                 if reset == False and tw.time < clock_valuation:
-                    element.value.append(-1)
+                    #element.value.append(-1)
+                    current_location = ota.sink_name
+                    clock_valuation = 0
+                    reset = True
+                    break
                 else:
                     flag = False
                     for otatran in ota.trans:
