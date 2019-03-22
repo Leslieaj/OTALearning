@@ -86,7 +86,7 @@ class OTATable(object):
 
     def is_consistent(self):
         """Determine whether the table is consistent.
-            (if tws1,tws2 \in S U R, if a \in sigma* tws1+a, tws2+a \in S U R and row(tws1) = row(tws2), 
+            (if tws1,tws2 in S U R, if a in sigma* tws1+a, tws2+a in S U R and row(tws1) = row(tws2), 
             then row(tws1+a) = row(tws2+a))
         """
         flag = True
