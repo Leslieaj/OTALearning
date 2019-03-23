@@ -1,8 +1,8 @@
 #OTA equivalence
 
 import sys, os
-#from ota import buildOTA, buildAssistantOTA, Timedword, ResetTimedword, State
-from ota import Timedword, ResetTimedword, State
+from ota import buildOTA, buildAssistantOTA, Timedword, ResetTimedword, State
+#from ota import Timedword, ResetTimedword, State
 from interval import Constraint
 from otatable import Element
 #from hypothesis import *
@@ -617,33 +617,37 @@ def equivalence_query(max_time_value, teacher, hypothesis):
 #     H, _ = buildOTA(experiments_path+'example3_1.json', 'q')
 #     HH = buildAssistantOTA(H, 'q')
 
-#     AA.show()
+#     #AA.show()
 #     print("------------------------------")
-#     HH.show()
-
+#     #HH.show()
+#     A.show()
+#     print("------------------------------")
+#     H.show()
 #     flag, ctx = equivalence_query(max_time_value,AA,HH)
 #     print(flag)
 #     print("------------------------------")
-#     print(ctx.show())
+#     #print(ctx.show())
 
-#     print("------------------------------")
+#     # print("------------------------------")
 #     flag_pos, w_pos = ota_inclusion(max_time_value, HH, AA)
 #     print(flag_pos)
-#     print(w_pos.show())
-#     print("--------------------------------------------")
-#     path1 = findpath(w_pos,'s',AA.sigma)
-#     for lw in path1:
-#         print(lw.show(),lw.action)
-#     print("----------------------------------------------")
-#     dtw = findDelayTimedwords(w_pos,'s',AA.sigma)
-#     print(dtw)
-#     print("----------------------------------------------")
-#     drtw = dTWs_to_dRTWs(w_pos,'s',AA)
-#     print(drtw)
-#     #flag, ctx = equivalence_query(max_time_value,AA,HH)
-#     #print(flag)
-#     print("------------------------------")
-#     #print(ctx.show())
+#     flag_neg, w_neg = ota_inclusion(max_time_value, AA, HH)
+#     print(flag_neg)
+#     # print(w_pos.show())
+#     # print("--------------------------------------------")
+#     # path1 = findpath(w_pos,'s',AA.sigma)
+#     # for lw in path1:
+#     #     print(lw.show(),lw.action)
+#     # print("----------------------------------------------")
+#     # dtw = findDelayTimedwords(w_pos,'s',AA.sigma)
+#     # print(dtw)
+#     # print("----------------------------------------------")
+#     # drtw = dTWs_to_dRTWs(w_pos,'s',AA)
+#     # print(drtw)
+#     # #flag, ctx = equivalence_query(max_time_value,AA,HH)
+#     # #print(flag)
+#     # print("------------------------------")
+#     # #print(ctx.show())
 
 
 # if __name__=='__main__':

@@ -5,7 +5,7 @@ import copy
 
 from ota import buildOTA, buildAssistantOTA
 from otatable import init_table, add_ctx, make_closed, make_consistent, make_evidence_closed
-from hypothesis import to_fa, fa_to_ota
+from hypothesis import to_fa, fa_to_ota, remove_sinklocation
 from equivalence import equivalence_query
 
 def main():
@@ -96,10 +96,13 @@ def main():
         # print("---------------------------------------------------")
         # print("Time intervals simplification...")
         # print()
-        # print("The learned Completed One-clock Timed Automtaton: ")
-        # print()
-        # refine_rta_trans(target)
-        # target.show()
+        print("Removing the sink location...")
+        print()
+        print("The learned One-clock Timed Automtaton: ")
+        print()
+        target_without_sink = remove_sinklocation(target)
+        target_without_sink.show()
+        print("---------------------------------------------------")
         print("Total time: " + str(end-start))
         print("---------------------------------------------------")
         print("The element number of S in the last table: " + str(len(table.S)))

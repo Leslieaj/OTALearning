@@ -105,3 +105,26 @@ def fa_to_ota(fa, sink_name, sigma, n):
     ota = OTA(new_name,sigma,states,trans,initstate_name,accept_names)
     ota.sink_name = sink_name
     return ota
+
+def remove_sinklocation(ota):
+    """
+    """
+    new_name = ota.name
+    temp_locations = [location for location in ota.locations if location.sink == False]
+    temp_trans = [tran for tran in ota.trans if tran.target != ota.sink_name]
+    initstate_name = ""
+    accept_names = []
+    for location, i in zip(temp_locations,range(0,len(temp_locations))):
+        new_name = str(i+1)
+        if location.init == True:
+            initstate_name = new_name
+        if location.accept == True:
+            accept_names.append(new_name)
+        for tran, j in zip(temp_trans, range(0,len(temp_trans))):
+            tran.id = j
+            if location.name == tran.source:
+                tran.source = new_name
+            if location.name == tran.target:
+                tran.target = new_name
+        location.name = new_name
+    return OTA(ota.name,ota.sigma,temp_locations,temp_trans,initstate_name,accept_names)
