@@ -107,7 +107,7 @@ def fa_to_ota(fa, sink_name, sigma, n):
     return ota
 
 def remove_sinklocation(ota):
-    """
+    """Remove the sink location of the ota.
     """
     new_name = ota.name
     temp_locations = [location for location in ota.locations if location.sink == False]
@@ -128,3 +128,9 @@ def remove_sinklocation(ota):
                 tran.target = new_name
         location.name = new_name
     return OTA(ota.name,ota.sigma,temp_locations,temp_trans,initstate_name,accept_names)
+
+def combine_transitions(ota):
+    """Combine the transitions of which have the same source location, the same target location, 
+    the same action, and the same reset.
+    """
+    return 0
