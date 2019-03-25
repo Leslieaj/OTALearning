@@ -106,7 +106,7 @@ def main():
         print("---------------------------------------------------")
         print("Total time of learning: " + str(end_learning-start))
         print("---------------------------------------------------")
-        print("Total time of learning + simplifing: " + str(end_removesink-start))
+        print("Total time of learning + simplifying: " + str(end_removesink-start))
         print("---------------------------------------------------")
         print("The element number of S in the last table: " + str(len(table.S)))
         print("The element number of R in the last table: " + str(len(table.R)))

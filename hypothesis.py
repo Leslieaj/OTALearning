@@ -96,10 +96,25 @@ def fa_to_ota(fa, sink_name, sigma, n):
                     index = timepoints.index(rtw.time)
                     temp_constraint = None
                     ## By now, we assuem that the timepoints are interger numbers.
+                    # if index + 1 < len(timepoints):
+                    #     temp_constraint = Constraint("[" + str(rtw.time) + "," + str(timepoints[index+1]) + ")")
+                    # else:
+                    #     temp_constraint = Constraint("[" + str(rtw.time) + "," + "+" + ")")
+                    ## Consider the float timepoints
                     if index + 1 < len(timepoints):
-                        temp_constraint = Constraint("[" + str(rtw.time) + "," + str(timepoints[index+1]) + ")")
+                        if isinstance(rtw.time,int) and isinstance(timepoints[index+1], int):
+                            temp_constraint = Constraint("[" + str(rtw.time) + "," + str(timepoints[index+1]) + ")")
+                        elif isinstance(rtw.time,int) and not isinstance(timepoints[index+1], int):
+                            temp_constraint = Constraint("[" + str(rtw.time) + "," + str(int(timepoints[index+1])) + "]")
+                        elif not isinstance(rtw.time,int) and isinstance(timepoints[index+1], int):
+                            temp_constraint = Constraint("(" + str(int(rtw.time)) + "," + str(timepoints[index+1]) + ")")
+                        else:
+                            temp_constraint = Constraint("(" + str(int(rtw.time)) + "," + str(int(timepoints[index+1])) + "]")
                     else:
-                        temp_constraint = Constraint("[" + str(rtw.time) + "," + "+" + ")")
+                        if isinstance(rtw.time,int):
+                            temp_constraint = Constraint("[" + str(rtw.time) + "," + "+" + ")")
+                        else:
+                            temp_constraint = Constraint("(" + str(int(rtw.time)) + "," + "+" + ")")
                     temp_tran = OTATran(len(trans), tran.source, tran.label[0].action, [temp_constraint], rtw.reset, tran.target, 'q')
                     trans.append(temp_tran)
     ota = OTA(new_name,sigma,states,trans,initstate_name,accept_names)

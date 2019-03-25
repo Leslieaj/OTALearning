@@ -405,7 +405,8 @@ def add_ctx(ctx, table, ota):
     #print(ctx)
     #print(fix_resets(ctx,ota))
     local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
-    #print(local_tws)
+    normalize(local_tws)
+    print(local_tws)
     #local_tws = dRTWs_to_lRTWs(ctx)
     pref = prefixes(local_tws)
     S_tws = [s.tws for s in table.S]
@@ -426,6 +427,19 @@ def add_ctx(ctx, table, ota):
             fill(temp_element, new_E, ota)
             new_R.append(temp_element)
     return OTATable(new_S, new_R, new_E)
+
+def normalize(tws):
+    """Normalize the ctx.
+    """
+    for rtw in tws:
+        if isinstance(rtw.time, int) == True:
+            pass
+        else:
+            integer, frac = str(rtw.time).split('.')
+            if frac == '0':
+                rtw.time = int(integer)
+            else:
+                rtw.time = float(integer + '.1')
 
 def init_table(sigma, ota):
     S = [Element([],[])]
