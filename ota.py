@@ -218,7 +218,8 @@ class OTA(object):
     def is_accepted_reset(self, tws):
         current_statename = self.run_resettimedwords(tws)
         if current_statename == self.sink_name:
-            return -1
+            #return -1
+            return 0
         elif current_statename in self.accept_names:
             return 1
         else:

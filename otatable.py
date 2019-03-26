@@ -254,7 +254,8 @@ def get_TW_delay_zero(tws, action, ota):
 
 def new_rtw_in_closed(tws, action, ota):
     if is_valid_rtws(tws) == False:
-        return ResetTimedword(action,0,True), -1
+        #return ResetTimedword(action,0,True), -1
+        return ResetTimedword(action,0,True), 0
     else:
         current_statename = ota.run_resettimedwords(tws)
         current_clock_valuation = 0
@@ -263,9 +264,11 @@ def new_rtw_in_closed(tws, action, ota):
             current_clock_valuation = tws[-1].time
             reset = tws[-1].reset
         if current_statename == ota.sink_name:
-            return ResetTimedword(action,0,True), -1
+            #return ResetTimedword(action,0,True), -1
+            return ResetTimedword(action,0,True), 0
         if reset == False and current_clock_valuation > 0:
-            return ResetTimedword(action,0,True), -1
+            #return ResetTimedword(action,0,True), -1
+            return ResetTimedword(action,0,True), 0
         else:
             flag = False
             for tran in ota.trans:
@@ -274,7 +277,8 @@ def new_rtw_in_closed(tws, action, ota):
                     current_statename = tran.target
                     new_rtw = ResetTimedword(action,0,tran.reset)
                     if current_statename == ota.sink_name:
-                        return new_rtw, -1
+                        #return new_rtw, -1
+                        return new_rtw, 0
                     elif current_statename in ota.accept_names:
                         return new_rtw, 1
                     else:
@@ -293,7 +297,8 @@ def fill(element, E, ota):
         element.value.append(f)
     if current_location_name == ota.sink_name:
         for i in range(len(element.value)-1, len(E)):
-            element.value.append(-1)
+            #element.value.append(-1)
+            element.value.append(0)
     else:
         for i in range(len(element.value)-1, len(E)):
             current_location = copy.deepcopy(current_location_name)
@@ -329,7 +334,8 @@ def fill(element, E, ota):
             if current_location in ota.accept_names:
                 element.value.append(1)
             elif current_location == ota.sink_name:
-                element.value.append(-1)
+                #element.value.append(-1)
+                element.value.append(0)
             else:
                 element.value.append(0)
 
@@ -460,7 +466,8 @@ def init_table(sigma, ota):
                 if tran.target in ota.accept_names:
                     new_value = [1]
                 elif tran.target == ota.sink_name:
-                    new_value = [-1]
+                    #new_value = [-1]
+                    new_value = [0]
                 else:
                     new_value = [0]
                 new_element = Element([new_rtw], new_value)
