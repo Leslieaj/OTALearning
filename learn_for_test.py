@@ -115,13 +115,14 @@ def main():
         print("Total number of membership query: " + str((len(table.S)+len(table.R))*(len(table.E)+1)))
         print("Total number of equivalence query: " + str(eq_number))
         print("*******************Successful !***********************")
-        filename = str(para[1])
+        filename = str(paras[1])
         file_pre,_ = filename.split('.',1)
         folders = file_pre.split('/')
         #folder = "/".join(folders[:-1])
         fname = folders[len(folders)-1].split('-')[0]
         with open('result/'+fname + '_result.txt', 'a') as f:
-            output = " ".join([str(end-start), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
+            output = " ".join([str(end_learning-start), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
             f.write(output)
+
 if __name__=='__main__':
 	main()
