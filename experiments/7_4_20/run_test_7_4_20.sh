@@ -3,5 +3,5 @@
 mkdir result
 for i in $(seq 1 10)
 do
-python3 ../../learn_for_test.py 4_4_20-$i.json
+python3 ../../learn_for_test.py 7_4_20-$i.json
 done

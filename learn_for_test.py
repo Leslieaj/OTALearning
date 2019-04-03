@@ -115,6 +115,8 @@ def main():
         print("Total number of membership query: " + str((len(table.S)+len(table.R))*(len(table.E)+1)))
         print("Total number of equivalence query: " + str(eq_number))
         print("*******************Successful !***********************")
+        filename = str(para[1])
+        file_pre,_ = filename.split('.',1)
         folders = file_pre.split('/')
         #folder = "/".join(folders[:-1])
         fname = folders[len(folders)-1].split('-')[0]
