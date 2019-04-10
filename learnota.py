@@ -110,6 +110,8 @@ def main():
         print("---------------------------------------------------")
         print("Total time of learning: " + str(end_learning-start))
         print("---------------------------------------------------")
+        print("Total time of learning: " + str(eq_total_time))
+        print("---------------------------------------------------")
         # print("Total time of learning + simplifying: " + str(end_removesink-start))
         # print("---------------------------------------------------")
         print("The element number of S in the last table: " + str(len(table.S)))
