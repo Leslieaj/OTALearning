@@ -34,6 +34,7 @@ def main():
     print("-----------------------------------------------")
     start = time.time()
     equivalent = False
+    eq_total_time = 0
     table = copy.deepcopy(T1)
     eq_number = 0
     target = None
@@ -73,7 +74,10 @@ def main():
         #h.show()
         #print("---------------------------------------------")
         target = copy.deepcopy(h)
+        eq_start = time.time()
         equivalent, ctx = equivalence_query(max_time_value,AA,h)
+        eq_end = time.time()
+        eq_total_time = eq_total_time + eq_end - eq_start
         #print(ctx.show())
         eq_number = eq_number + 1
         if equivalent == False:
@@ -106,6 +110,8 @@ def main():
         print("---------------------------------------------------")
         print("Total time of learning: " + str(end_learning-start))
         print("---------------------------------------------------")
+        print("Total time of equivalence queries: " + str(eq_total_time))
+        print("---------------------------------------------------")
         print("Total time of learning + simplifying: " + str(end_removesink-start))
         print("---------------------------------------------------")
         print("The element number of S in the last table: " + str(len(table.S)))
@@ -121,7 +127,7 @@ def main():
         #folder = "/".join(folders[:-1])
         fname = folders[len(folders)-1].split('-')[0]
         with open('result/'+fname + '_result.txt', 'a') as f:
-            output = " ".join([str(end_learning-start), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
+            output = " ".join([str(end_learning-start), str(eq_total_time), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
             f.write(output)
 
 if __name__=='__main__':

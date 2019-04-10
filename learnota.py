@@ -34,6 +34,7 @@ def main():
     print("-----------------------------------------------")
     start = time.time()
     equivalent = False
+    eq_total_time = 0
     table = copy.deepcopy(T1)
     eq_number = 0
     target = None
@@ -73,7 +74,10 @@ def main():
         #h.show()
         #print("---------------------------------------------")
         target = copy.deepcopy(h)
+        eq_start = time.time()
         equivalent, ctx = equivalence_query(max_time_value,AA,h)
+        eq_end = time.time()
+        eq_total_time = eq_total_time + eq_end - eq_start
         #print(ctx.show())
         eq_number = eq_number + 1
         if equivalent == False:
@@ -105,6 +109,8 @@ def main():
         target_without_sink.show()
         print("---------------------------------------------------")
         print("Total time of learning: " + str(end_learning-start))
+        print("---------------------------------------------------")
+        print("Total time of equivalence queries: " + str(eq_total_time))
         print("---------------------------------------------------")
         print("Total time of learning + simplifying: " + str(end_removesink-start))
         print("---------------------------------------------------")
