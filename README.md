@@ -1,4 +1,4 @@
-# RTALearning
+# OTALearning
 
 A prototype on learning one-clock timed automata.
 
