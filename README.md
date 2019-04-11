@@ -33,8 +33,8 @@ python3 learnota.py experiments/example.json
 
   ```json
   {
-    "name": "A",
-    "s": ["1", "2"],
+      "name": "A",
+      "s": ["1", "2"],
   	"sigma": ["a", "b"],
   	"tran": {
   		"0": ["1", "a", "(1,3)", "n", "2"],
@@ -52,7 +52,7 @@ python3 learnota.py experiments/example.json
   - "tran" : the set of transitions in the following form:
     - transition id : [name of the source location, action, guard, reset, name of the target location]
     - '+' in a guard means $+\infty$;
-    - ''r''  means reset the clock, ''n'' otherwise.
+    - ''r''  means resetting the clock, ''n'' otherwise.
 
   - "init" : the name of initial location;
   - "accept" : the set of the name of accepting locations.
@@ -62,4 +62,4 @@ python3 learnota.py experiments/example.json
 - Every iteration instance of the timed observation table during the learning process;
 - If we learn the target DOTA successfully, then the finial COTA will be printed on the terminal. Additionally, the total time, the size of $S$, the size of $R$, the size of $E​$, the number of equivalence query, and the number of membership query will also be given. 
 - If we did not learn the target DOTA, we print "Error! Learning Failed." on the terminal.
-- The randomly experiments can be conducted by running the shell scripts in the corresponding folders. The results are stored in a folder named ''results''. In the results file,  one line for  a DOTA. The 8 numbers mean the total time, $\lvert S \rvert$, $\lvert R \rvert$, $\lvert E \rvert$ (excluding the empty word), the iteration numbers of the table, the number of membership queries, the number of equivalence queries and the number of locations in the learned DOTA, respectively.
+- The randomly experiments can be conducted by running the shell scripts in the corresponding folders. The results are stored in a folder named ''results''. In a result file,  one line for  a DOTA. The 8 numbers mean the total time, $\lvert S \rvert$, $\lvert R \rvert$, $\lvert E \rvert​$ (excluding the empty word), the iteration numbers of the table, the number of membership queries, the number of equivalence queries and the number of locations in the learned DOTA, respectively.
