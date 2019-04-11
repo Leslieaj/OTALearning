@@ -4,7 +4,7 @@ A prototype on learning one-clock timed automata.
 
 ### Overview
 
-This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L^*  Algorithm for learning regular sets from queries and counterexamples. The tool implement an Angluin-style active learning algorithm on DOTAs.  This branch is with an accelerating trick. The dev branch is the version without the accelerating trick.
+This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L^*  Algorithm for learning regular sets from queries and counterexamples. The tool implement an Angluin-style active learning algorithm on DOTAs. This branch is without the accelerating trick. The master branch is the version with it.
 
 ### Installation & Usage
 
@@ -50,9 +50,9 @@ python3 learnota.py experiments/example.json
   - "s" : the set of the name of locations;
   - "sigma" : the alphabet;
   - "tran" : the set of transitions in the following form:
-    - transition id : [name of the source location, action, guard, reset, name of the target location]
-    - '+' in a guard means INFTY​;
-    - ''r''  means resetting the clock, ''n'' otherwise.
+    - transition id : [name of the source location, action, guard, reset, name of the target location];
+    - "+" in a guard means INFTY​;
+    - "r" means resetting the clock, "n" otherwise.
 
   - "init" : the name of initial location;
   - "accept" : the set of the name of accepting locations.
