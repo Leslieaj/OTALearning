@@ -90,7 +90,7 @@ def main():
     end_learning = time.time()
     if target is None:
         print("Error! Learning Failed.")
-        print("*******************Failed .***********************")
+        print("*******************Failed.***********************")
     else:
         print("Succeed! The learned OTA is as follows.")
         print("---------------------------------------------------")
@@ -109,8 +109,8 @@ def main():
         target_without_sink.show()
         print("---------------------------------------------------")
         print("Total time of learning: " + str(end_learning-start))
-        print("---------------------------------------------------")
-        print("Total time of equivalence queries: " + str(eq_total_time))
+        #print("---------------------------------------------------")
+        #print("Total time of equivalence queries: " + str(eq_total_time))
         print("---------------------------------------------------")
         print("Total time of learning + simplifying: " + str(end_removesink-start))
         print("---------------------------------------------------")
@@ -120,7 +120,7 @@ def main():
         print("Total number of observation table: " + str(t_number))
         print("Total number of membership query: " + str((len(table.S)+len(table.R))*(len(table.E)+1)))
         print("Total number of equivalence query: " + str(eq_number))
-        print("*******************Successful !***********************")
+        print("*******************Successful!***********************")
 
 if __name__=='__main__':
 	main()
