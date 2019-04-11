@@ -127,7 +127,8 @@ def main():
         #folder = "/".join(folders[:-1])
         fname = folders[len(folders)-1].split('-')[0]
         with open('result/'+fname + '_result.txt', 'a') as f:
-            output = " ".join([str(end_learning-start), str(eq_total_time), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
+            #output = " ".join([str(end_learning-start), str(eq_total_time), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
+            output = " ".join([str(end_learning-start), str(len(table.S)), str(len(table.R)), str(len(table.E)), str(t_number), str((len(table.S)+len(table.R))*(len(table.E)+1)), str(eq_number), str(len(target_without_sink.locations)), '\n'])
             f.write(output)
 
 if __name__=='__main__':
