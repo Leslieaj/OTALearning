@@ -34,7 +34,7 @@ python3 learnota.py experiments/example.json
   ```json
   {
     "name": "A",
-    "s": ["1", "2"],
+    "l": ["1", "2"],
     "sigma": ["a", "b"],
     "tran": {
   	    "0": ["1", "a", "(1,3)", "n", "2"],
