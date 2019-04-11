@@ -4,7 +4,7 @@ A prototype on learning one-clock timed automata.
 
 ### Overview
 
-This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L^*  Algorithm for learning regular sets from queries and counterexamples. The tool implement an Angluin-style active learning algorithm on DOTAs.  This branch is with an accelerating trick. The dev branch is the version without the accelerating trick.
+This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L^*  Algorithm for learning regular sets from queries and counterexamples. The tool implement an Angluin-style active learning algorithm on DOTAs. This branch is with an accelerating trick. The dev branch is the version without the accelerating trick.
 
 ### Installation & Usage
 
@@ -50,9 +50,9 @@ python3 learnota.py experiments/example.json
   - "s" : the set of the name of locations;
   - "sigma" : the alphabet;
   - "tran" : the set of transitions in the following form:
-    - transition id : [name of the source location, action, guard, reset, name of the target location]
-    - '+' in a guard means INFTY​;
-    - ''r''  means resetting the clock, ''n'' otherwise.
+    - transition id : [name of the source location, action, guard, reset, name of the target location];
+    - "+" in a guard means INFTY​;
+    - "r" means resetting the clock, "n" otherwise.
 
   - "init" : the name of initial location;
   - "accept" : the set of the name of accepting locations.
@@ -61,4 +61,4 @@ python3 learnota.py experiments/example.json
 
 - Every iteration instance of the timed observation table during the learning process;
 - If we learn the target DOTA successfully, then the finial COTA will be printed on the terminal. Additionally, the total time, the size of S​, the size of ​R​, the size of ​E​, the number of equivalence query, and the number of membership query will also be given. 
-- The randomly experiments can be conducted by running the shell scripts in the corresponding folders. The results are stored in a folder named ''results''. In a result file,  one line for  a DOTA. The 8 numbers mean the total time, |S|,|R|,|E|(excluding the empty word), the iteration numbers of the table, the number of membership queries, the number of equivalence queries and the number of locations in the learned DOTA, respectively.
+- The randomly experiments can be conducted by running the shell scripts in the corresponding folders. The results are stored in a folder named "result". In a result file,  one line for  a DOTA. The 8 numbers mean the total time, |S|,|R|,|E|(excluding the empty word), the iteration numbers of the table, the number of membership queries, the number of equivalence queries and the number of locations in the learned DOTA, respectively.
