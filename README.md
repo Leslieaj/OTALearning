@@ -4,7 +4,7 @@ A prototype on learning one-clock timed automata.
 
 ### Overview
 
-This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L* Algorithm for learning regular sets from queries and counterexamples. The tool implement an Angluin-style active learning algorithm on DOTAs. This branch is with an accelerating trick. The dev branch is the version without the accelerating trick.
+This tool is dedicated to learning deterministic one-clock timed automata (DOTAs) which is a subclass of timed automata with only one clock. In 1987, Dana Angluin introduced the L* Algorithm for learning regular sets from queries and counterexamples. The tool is the implementation of an Angluin-style active learning algorithm on DOTAs. This branch is with a normal teacher and an accelerating trick. 
 
 ### Installation & Usage
 
