@@ -469,3 +469,21 @@ def init_table(sigma, ota):
                 break
     T = OTATable(S, R, E)
     return T
+
+
+def guess_ctx_reset(dtws):
+    """When receiving a counterexample (delay timed word), guess all resets and return all reset delay timed words as ctx candidates.  
+    """
+    #ctxs = []
+    new_tws = [Timedword(tw.action,tw.time) for tw in dtws]
+    ctxs = [[ResetTimedword(new_tws[0].action, new_tws[0].time, False)], [ResetTimedword(new_tws[0].action, new_tws[0].time, True)]]
+    for i in range(1, len(new_tws)):
+        templist = []
+        for rtws in ctxs:
+            temp_n = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, False)] 
+            temp_r = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, True)]
+            templist.append(temp_n)
+            templist.append(temp_r)
+        #ctxs = copy.deepcopy(templist)
+        ctxs = templist
+    return ctxs

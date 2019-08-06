@@ -4,7 +4,7 @@ import sys, os
 from ota import buildOTA, buildAssistantOTA, Timedword, ResetTimedword, State
 #from ota import Timedword, ResetTimedword, State
 from interval import Constraint
-from otatable import Element
+from otatable import Element, guess_ctx_reset
 #from hypothesis import *
 import copy
 #from queue import Queue
@@ -639,11 +639,16 @@ def equivalence_main():
     print("------------------------------")
     HH.show()
     print("------------------------------")
-#     H.show()
-#     flag, ctx = equivalence_query(max_time_value,AA,HH)
-#     print(flag)
-#     print("------------------------------")
-#     #print(ctx.show())
+    H.show()
+    flag, ctx = equivalence_query_normal(max_time_value,AA,HH)
+    print(flag)
+    print("-------------normal-----------------")
+    print(ctx.tws)
+    print()
+    ctxs = guess_ctx_reset(ctx.tws)
+    print(len(ctxs))
+    for rtws in ctxs:
+        print(rtws)
 
     # print("------------------------------")
     flag_pos, w_pos = ota_inclusion(max_time_value, HH, AA)
