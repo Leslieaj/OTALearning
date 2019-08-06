@@ -404,7 +404,8 @@ def add_ctx(ctx, table, ota):
     """
     #print(ctx)
     #print(fix_resets(ctx,ota))
-    local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
+    #local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
+    local_tws = dRTWs_to_lRTWs(ctx)
     normalize(local_tws)
     print(local_tws)
     #local_tws = dRTWs_to_lRTWs(ctx)
