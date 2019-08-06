@@ -504,3 +504,37 @@ def check_guessed_reset(lrtws, table):
                 break
     return True
 
+def add_ctx_normal(dtws, table, ota):
+    """Given a counterexample ctx, guess the reset, check the reset, for each suitable one, add it and its prefixes to R (except those already present in S and R)
+    """
+    #print(ctx)
+    #print(fix_resets(ctx,ota))
+    #local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
+    OTAtables = []
+    ctxs = guess_ctx_reset(dtws)
+    for ctx in ctxs:
+        local_tws = dRTWs_to_lRTWs(ctx)
+        normalize(local_tws)
+        if check_guessed_reset(local_tws, table) == True:
+            print(local_tws)
+            pref = prefixes(local_tws)
+            S_tws = [s.tws for s in table.S]
+            S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
+            new_S = [s for s in table.S]
+            new_R = [r for r in table.R]
+            new_E = [e for e in table.E]
+            for tws in pref:
+                need_add = True
+                for stws in S_R_tws:
+                #for stws in S_tws:
+                    #if tws_equal(tws, stws):
+                    if tws == stws:
+                        need_add = False
+                        break
+                if need_add == True:
+                    temp_element = Element(tws,[])
+                    fill(temp_element, new_E, ota)
+                    new_R.append(temp_element)
+            new_OTAtable = OTATable(new_S, new_R, new_E)
+            OTAtables.append(new_OTAtable)
+    return OTAtables
