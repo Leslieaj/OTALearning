@@ -487,3 +487,20 @@ def guess_ctx_reset(dtws):
         #ctxs = copy.deepcopy(templist)
         ctxs = templist
     return ctxs
+
+def check_guessed_reset(lrtws, table):
+    """Given a guessed normalized reset-logical(local)-timed-word, check the reset whether it is suitable to current table.
+       If the action and the clock valuation are same to the Element in S U R, however, the resets are diferent, then return False to identicate
+       the wrong guess.
+    """
+    S_U_R = [s for s in table.S] + [r for r in table.R]
+    for element in S_U_R:
+        for rtw, i in zip(lrtws, range(0,lrtws)):
+            if i < len(element.tws):
+                if rtw.action == element.tws[i].action and rtw.time == element.tws[i].time:
+                    if rtw.reset != element.tws[i].reset:
+                        return False
+            else:
+                break
+    return True
+
