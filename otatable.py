@@ -533,7 +533,7 @@ def check_guessed_reset(lrtws, table):
     """
     S_U_R = [s for s in table.S] + [r for r in table.R]
     for element in S_U_R:
-        for rtw, i in zip(lrtws, range(0,lrtws)):
+        for rtw, i in zip(lrtws, range(0, len(lrtws))):
             if i < len(element.tws):
                 if rtw.action == element.tws[i].action and rtw.time == element.tws[i].time:
                     if rtw.reset != element.tws[i].reset:
