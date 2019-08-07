@@ -470,6 +470,44 @@ def init_table(sigma, ota):
     T = OTATable(S, R, E)
     return T
 
+def init_table_normal(sigma, ota):
+    """Initial tables.
+    """
+    S = [Element([],[])]
+    R = []
+    E = []
+    for s in S:
+        if ota.initstate_name in ota.accept_names:
+            s.value.append(1)
+        else:
+            s.value.append(0)
+    tables = [OTATable(S, R, E)]
+    for i in range(0, len(sigma)):
+        temp_tables = []
+        for table in tables:
+            new_tw = Timedword(sigma[i], 0)
+            for tran in ota.trans:
+                if tran.source == ota.initstate_name and tran.is_pass(new_tw):
+                    new_rtw_n = ResetTimedword(new_tw.action, new_tw.time, False)
+                    new_rtw_r = ResetTimedword(new_tw.action, new_tw.time, True)
+                    new_value = []
+                    if tran.target in ota.accept_names:
+                        new_value = [1]
+                    elif tran.target == ota.sink_name:
+                        new_value = [-1]
+                    else:
+                        new_value = [0]
+                    new_element_n = Element([new_rtw_n], new_value)
+                    new_element_r = Element([new_rtw_r], new_value)
+                    temp_R_n = table.R + [new_element_n]
+                    temp_R_r = table.R + [new_element_r]
+                    new_table_n = OTATable(S, temp_R_n, E)
+                    new_table_r = OTATable(S, temp_R_r, E)
+                    temp_tables.append(new_table_n)
+                    temp_tables.append(new_table_r)
+                    break
+        tables = temp_tables
+    return tables
 
 def guess_ctx_reset(dtws):
     """When receiving a counterexample (delay timed word), guess all resets and return all reset delay timed words as ctx candidates.  
