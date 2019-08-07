@@ -500,6 +500,8 @@ def check_guessed_reset(lrtws, table):
                 if rtw.action == element.tws[i].action and rtw.time == element.tws[i].time:
                     if rtw.reset != element.tws[i].reset:
                         return False
+                else:
+                    break
             else:
                 break
     return True
