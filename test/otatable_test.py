@@ -244,12 +244,31 @@ class EquivalenceTest(unittest.TestCase):
         print("-------------------------T10------------------------")
         T10.show()
         print("----------------------------------------------------")
-        for ctx in ctxs5:
-            print(ctx)
-            local_tws = dRTWs_to_lRTWs(ctx)
-            normalize(local_tws)
-            print(local_tws)
-            print(check_guessed_reset(local_tws, T10))
+        # for ctx in ctxs5:
+        #     print(ctx)
+        #     local_tws = dRTWs_to_lRTWs(ctx)
+        #     normalize(local_tws)
+        #     print(local_tws)
+        #     print(check_guessed_reset(local_tws, T10))
+        input = [
+            [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False)],
+            [ResetTimedword('b',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False)],
+            [ResetTimedword('a',1,False), ResetTimedword('a',0,False)],
+            [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('b',4,False)],
+            [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False), ResetTimedword('a',2,True)],
+            [ResetTimedword('a',1,False), ResetTimedword('b',2,False), ResetTimedword('a',0,False)],
+            [ResetTimedword('a',1,False), ResetTimedword('b',1.1,True), ResetTimedword('a',0,False)],
+            [ResetTimedword('a',1,True)]
+        ]
+        self.assertEqual(check_guessed_reset(input[0], T10), True)
+        self.assertEqual(check_guessed_reset(input[1], T10), True)
+        self.assertEqual(check_guessed_reset(input[2], T10), False)
+        self.assertEqual(check_guessed_reset(input[3], T10), True)
+        self.assertEqual(check_guessed_reset(input[4], T10), True)
+        self.assertEqual(check_guessed_reset(input[5], T10), False)
+        self.assertEqual(check_guessed_reset(input[6], T10), True)
+        self.assertEqual(check_guessed_reset(input[7], T10), False)
+
         # T11 = add_ctx(ctx5.tws,T10,AA)
         # T11.show()
         # print("--------------------------------------------------")
