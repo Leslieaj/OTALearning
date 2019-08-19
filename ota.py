@@ -240,7 +240,8 @@ class OTA(object):
                 else:
                     flag = False
                     for tran in self.trans:
-                        if tran.source == current_statename and tran.is_pass_reset(tw):
+                        #if tran.source == current_statename and tran.is_pass_reset(tw):
+                        if tran.source == current_statename and tran.is_pass(tw):
                             current_statename = tran.target
                             current_clock_valuation = tw.time
                             reset = tw.reset
