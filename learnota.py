@@ -57,14 +57,14 @@ def main():
                 print("Table " + str(t_number) + " is as follow.")
                 table.show()
                 print("--------------------------------------------------")
-            # flag_evi_closed, new_added = table.is_evidence_closed(AA)
-            # if flag_evi_closed == False:
-            #     temp = make_evidence_closed(new_added, table, sigma, AA)
-            #     table = temp
-            #     t_number = t_number + 1
-            #     print("Table " + str(t_number) + " is as follow.")
-            #     table.show()
-            #     print("--------------------------------------------------")
+            flag_evi_closed, new_added = table.is_evidence_closed(AA)
+            if flag_evi_closed == False:
+                temp = make_evidence_closed(new_added, table, sigma, AA)
+                table = temp
+                t_number = t_number + 1
+                print("Table " + str(t_number) + " is as follow.")
+                table.show()
+                print("--------------------------------------------------")
             prepared = table.is_prepared(AA)
         fa, sink_name = to_fa(table, t_number)
         #print("---------------------------------------------")
