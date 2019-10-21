@@ -1,317 +1,238 @@
 #Unit tests for otatable.py
 
 import unittest
-import sys
+import sys,os
 sys.path.append('../')
-from ota import *
-from otatable import *
-from equivalence import *
-from hypothesis import *
-from learnota import init_table
-
-A, _ = buildOTA('example.json', 's')
-AA = buildAssistantOTA(A, 's')  # Assist
-max_time_value = AA.max_time_value()
-
-rtw1 = ResetTimedword('a',0,True)
-rtw2 = ResetTimedword('b',0,True)
-rtw3 = ResetTimedword('a',1,False)
-rtw4 = ResetTimedword('b',2,True)
-
-rtws0 = [] # empty
-rtws1 = [rtw1]
-rtws2 = [rtw2]
-rtws3 = [rtw3]
-rtws4 = [rtw3,rtw4]
-
-# e0 = Element(rtws0,[0])
-# e1 = Element(rtws1,[0])
-# e2 = Element(rtws2,[0])
-# e3 = Element(rtws3,[0])
-# e4 = Element(rtws4,[1])
+from ota import buildAssistantOTA, buildOTA, ResetTimedword, Timedword, dRTWs_to_lRTWs
+from otatable import OTATable, init_table_normal, Element, guess_resets_in_suffixes, guess_resets_in_newsuffix, normalize, prefixes, add_ctx_normal, make_closed, make_consistent
+from equivalence import equivalence_query_normal, guess_ctx_reset
 
 class EquivalenceTest(unittest.TestCase):
-    # def testResetTimedword(self):
-    #     self.assertEqual(rtws0,[])
-    #     self.assertEqual([rtw.show() for rtw in rtws1],["(a,0,R)"])
-    #     self.assertEqual([rtw.show() for rtw in rtws2],["(b,0,R)"])
-    #     self.assertEqual([rtw.show() for rtw in rtws3],["(a,1,N)"])
-    #     self.assertEqual([rtw.show() for rtw in rtws4],["(a,1,N)","(b,2,R)"])
-
-    # def testOTATable_isclosed(self):
-    #     e0 = Element(rtws0,[0])
-    #     e1 = Element(rtws1,[0])
-    #     e2 = Element(rtws2,[0])
-    #     e3 = Element(rtws3,[0])
-    #     e4 = Element(rtws4,[1])
-
-    #     S1 = [e0]
-    #     R1 = [e1,e2]
-    #     E1 = []
-    #     T1 = OTATable(S1,R1,E1)
-    #     #T1.show()
-    #     flag_closed, new_S, new_R, move = T1.is_closed()
-    #     self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
-
-    #     ctx1 = Element([ResetTimedword('a',1,False)],[1])
-    #     R2 = [e1,e2,ctx1]
-    #     T2 = OTATable(S1,R2,E1)
-    #     flag_closed, new_S, new_R, move = T2.is_closed()
-    #     self.assertEqual(flag_closed,False)
-    #     self.assertEqual(new_S, [e0,ctx1])
-    #     self.assertEqual(new_R, [e1,e2])
-    #     self.assertEqual(move,[ctx1])
-
-    # def testMakeclosed(self):
-    #     e0 = Element(rtws0,[0])
-    #     e1 = Element(rtws1,[0])
-    #     e2 = Element(rtws2,[0])
-    #     e3 = Element(rtws3,[0])
-    #     e4 = Element(rtws4,[1])
-    #     S1 = [e0]
-    #     R1 = [e1,e2]
-    #     E1 = []
-    #     T1 = OTATable(S1,R1,E1)
-    #     #T1.show()
-    #     flag_closed, new_S, new_R, move = T1.is_closed()
-    #     self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
-
-    #     ctx1 = Element([ResetTimedword('a',1,False)],[1])
-    #     R2 = [e1,e2,ctx1]
-    #     T2 = OTATable(S1,R2,E1)
-    #     flag_closed, new_S, new_R, move = T2.is_closed()
-    #     T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
-    #     #T3.show()
-
-    # def testToFA(self):
-    #     e0 = Element(rtws0,[0])
-    #     e1 = Element(rtws1,[0])
-    #     e2 = Element(rtws2,[0])
-    #     e3 = Element(rtws3,[0])
-    #     e4 = Element(rtws4,[1])
-    #     S1 = [e0]
-    #     R1 = [e1,e2]
-    #     E1 = []
-    #     T1 = OTATable(S1,R1,E1)
-    #     #T1.show()
-    #     flag_closed, new_S, new_R, move = T1.is_closed()
-    #     self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
-
-    #     ctx1 = Element([ResetTimedword('a',1,False)],[1])
-    #     R2 = [e1,e2,ctx1]
-    #     T2 = OTATable(S1,R2,E1)
-    #     flag_closed, new_S, new_R, move = T2.is_closed()
-    #     T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
-    #     #T3.show()
-    #     FA2 = to_fa(T3, 2)
-    #     #FA2.show()
-
-    # def testFAToOTA(self):
-    #     e0 = Element(rtws0,[0])
-    #     e1 = Element(rtws1,[0])
-    #     e2 = Element(rtws2,[0])
-    #     e3 = Element(rtws3,[0])
-    #     e4 = Element(rtws4,[1])
-    #     S1 = [e0]
-    #     R1 = [e1,e2]
-    #     E1 = []
-    #     T1 = OTATable(S1,R1,E1)
-    #     #T1.show()
-    #     flag_closed, new_S, new_R, move = T1.is_closed()
-    #     self.assertEqual([flag_closed,new_S,new_R,move], [True,T1.S,T1.R,[]])
-
-    #     ctx1 = Element([ResetTimedword('a',1,False)],[1])
-    #     R2 = [e1,e2,ctx1]
-    #     T2 = OTATable(S1,R2,E1)
-    #     flag_closed, new_S, new_R, move = T2.is_closed()
-    #     T3 = make_closed(new_S, new_R, move, T2, AA.sigma, AA)
-    #     #T3.show()
-    #     FA2,_ = to_fa(T3, 2)
-    #     H2 = fa_to_ota(FA2,"", AA.sigma, 2)
-    #     #H2.show()
-
     def test_init_table_normal(self):
-        A, _ = buildOTA('../experiments/example6.json', 's')
+        A = buildOTA('example6.json', 's')
         AA = buildAssistantOTA(A, 's')  # Assist
-        max_time_value = AA.max_time_value()
+        #max_time_value = AA.max_time_value()
         sigma = AA.sigma
 
         tables = init_table_normal(sigma, AA)
-        self.assertEqual(len(tables), 8)
+        self.assertEqual(len(tables), 1)
         # for table, i in zip(tables, range(1, len(tables)+1)):
         #     print("------------"+ str(i)+"-----------------------")
         #     table.show()
+    
+    def test_is_closed(self):
+        A = buildOTA('example6.json', 's')
+        AA = buildAssistantOTA(A, 's')  # Assist
+        #max_time_value = AA.max_time_value()
+        sigma = AA.sigma
 
-    def test1(self):
-        A, _ = buildOTA('example2.json', 's')
+        T1_tables = init_table_normal(sigma, AA)
+        self.assertEqual(len(T1_tables), 1)
+        #print("--------------------------------------------------")
+        flag_closed, new_S, new_R, move = T1_tables[0].is_closed()
+        self.assertEqual(flag_closed, False)
+        self.assertEqual(new_S, [Element([],[0],[]), Element([ResetTimedword('a',0,True)],[-1],[])])
+        self.assertEqual(new_R, [Element([ResetTimedword('b',0,True)],[-1],[]), Element([ResetTimedword('c',0,True)],[-1],[])])
+        self.assertEqual(move, Element([ResetTimedword('a',0,True)],[-1],[]))
+
+    def test_make_closed(self):
+        A = buildOTA('f.json', 's')
+        AA = buildAssistantOTA(A, 's')  # Assist
+        #max_time_value = AA.max_time_value()
+        sigma = AA.sigma
+
+        T1_tables = init_table_normal(sigma, AA)
+        self.assertEqual(len(T1_tables), 2)
+        #print("--------------------------------------------------")
+        flag_closed, new_S, new_R, move = T1_tables[0].is_closed()
+        self.assertEqual(flag_closed, False)
+        tables = make_closed(new_S, new_R, move, T1_tables[0], sigma, AA)
+        print("--------------make closed---------------------")
+        self.assertEqual(len(tables),2)
+        # print(len(tables))
+        # for table in tables:
+        #     table.show()
+        #     print("--------------------------")
+    
+    def test_is_consistent(self):
+        A = buildOTA('example2.json', 's')
         AA = buildAssistantOTA(A, 's')  # Assist
         max_time_value = AA.max_time_value()
         sigma = AA.sigma
 
-        T1 = init_table(sigma, AA)
-        T1.show()
-        print("--------------------------------------------------")
-        flag_closed, new_S, new_R, move = T1.is_closed()
-        #print(flag_closed)
-        T2 = make_closed(new_S, new_R, move, T1, sigma, AA)
-        T2.show()
-        print("--------------------------------------------------")
-        FA1,sink = to_fa(T2, 1)
-        FA1.show()
-        print("--------------------------------------------------")
-        H1 = fa_to_ota(FA1,sink, AA.sigma, 1)
-        H1.show()
-        print("--------------------------------------------------")
-        flag1, ctx1 = equivalence_query(max_time_value,AA,H1)
-        print(flag1)
-        print("--------------------------!!----------------------")
-        print(ctx1.show())
-        T3 = add_ctx(ctx1.tws,T2,AA)
-        T3.show()
-        print("--------------------------------------------------")
-        flag_closed, new_S, new_R, move = T3.is_closed()
-        #print(flag_closed)
-        T4 = make_closed(new_S, new_R, move, T3, sigma, AA)
-        T4.show()
-        print("--------------------------------------------------")
-        FA2,sink = to_fa(T4, 2)
-        FA2.show()
-        print("--------------------------------------------------")
-        H2 = fa_to_ota(FA2,sink,sigma,2)
-        H2.show()
-        print("--------------------------------------------------")
-        flag2, ctx2 = equivalence_query(max_time_value,AA,H2)
-        print(flag2)
-        print(ctx2.show())
-        T5 = add_ctx(ctx2.tws,T4,AA)
-        T5.show()
-        print("--------------------------------------------------")
-        flag_consistent, new_a, new_e_index = T5.is_consistent()
-        print(flag_consistent)
-        print(new_a)
-        T6 = make_consistent(new_a,new_e_index,T5,AA.sigma,AA)
-        T6.show()
-    #     print("--------------------------------------------------")
-    #     flag_evidence_closed, new_added = T6.is_evidence_closed(AA)
-    #     print(flag_evidence_closed)
-    #     T7 = make_evidence_closed(new_added, T6, sigma, AA)
-    #     T7.show()
-    #     print("--------------------------------------------------")
-    #     flag_closed, new_S, new_R, move = T7.is_closed()
-    #     T8 = make_closed(new_S, new_R, move, T7, sigma, AA)
-    #     T8.show()
-    #     flag_consistent, new_a, new_e_index = T8.is_consistent()
-    #     print(flag_consistent)
-    #     flag_evidence_closed, new_added = T8.is_evidence_closed(AA)
-    #     print(flag_evidence_closed)
-    #     print("--------------------------------------------------")
-    #     FA3,sink = to_fa(T8, 3)
-    #     FA3.show()
-    #     print("--------------------------------------------------")
-    #     H3 = fa_to_ota(FA3,sink,sigma,3)
-    #     H3.show()
-    #     print("--------------------------------------------------")
-    #     flag3, ctx3 = equivalence_query(max_time_value,AA,H3)
-    #     print(flag3)
-    #     T9 = add_ctx(ctx3.tws,T8,AA)
-    #     T9.show()
-    #     prepared = T9.is_prepared(AA)
-    #     print(prepared)
-    #     print("--------------------------------------------------")
-    #     FA4,sink = to_fa(T9, 4)
-    #     H4 = fa_to_ota(FA4,sink,sigma,4)
-    #     H4.show()
-    #     print("--------------------------------------------------")
-    #     flag4, ctx4 = equivalence_query(max_time_value,AA,H4)
-    #     print(flag4)
-    #     T10 = add_ctx(ctx4.tws,T9,AA)
-    #     T10.show()
-    #     prepared = T10.is_prepared(AA)
-    #     print(prepared)
-    #     print("--------------------------------------------------")
-    #     FA5,sink = to_fa(T10, 5)
-    #     FA5.show()
-    #     print()
-    #     H5 = fa_to_ota(FA5,sink,sigma,5)
-    #     H5.show()
-    #     print("--------------------------------------------------")
-    #     flag5, ctx5 = equivalence_query(max_time_value,AA,H5)
-    #     print(flag5)
-    #     print(ctx5.tws)
-    #     flag5, dtw_ctx5 = equivalence_query_normal(max_time_value,AA,H5)
-    #     print(dtw_ctx5.tws)
-    #     ctxs5 = guess_ctx_reset(dtw_ctx5.tws)
-    #     # print(len(ctxs5))
-    #     print("-------------------------T10------------------------")
-    #     T10.show()
-    #     print("----------------------------------------------------")
-    #     # for ctx in ctxs5:
-    #     #     print(ctx)
-    #     #     local_tws = dRTWs_to_lRTWs(ctx)
-    #     #     normalize(local_tws)
-    #     #     print(local_tws)
-    #     #     print(check_guessed_reset(local_tws, T10))
-    #     input = [
-    #         [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False)],
-    #         [ResetTimedword('b',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False)],
-    #         [ResetTimedword('a',1,False), ResetTimedword('a',0,False)],
-    #         [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('b',4,False)],
-    #         [ResetTimedword('a',1,False), ResetTimedword('b',2,True), ResetTimedword('a',0,False), ResetTimedword('a',2,True)],
-    #         [ResetTimedword('a',1,False), ResetTimedword('b',2,False), ResetTimedword('a',0,False)],
-    #         [ResetTimedword('a',1,False), ResetTimedword('b',1.1,True), ResetTimedword('a',0,False)],
-    #         [ResetTimedword('a',1,True)]
-    #     ]
-    #     self.assertEqual(check_guessed_reset(input[0], T10), True)
-    #     self.assertEqual(check_guessed_reset(input[1], T10), True)
-    #     self.assertEqual(check_guessed_reset(input[2], T10), False)
-    #     self.assertEqual(check_guessed_reset(input[3], T10), True)
-    #     self.assertEqual(check_guessed_reset(input[4], T10), True)
-    #     self.assertEqual(check_guessed_reset(input[5], T10), False)
-    #     self.assertEqual(check_guessed_reset(input[6], T10), True)
-    #     self.assertEqual(check_guessed_reset(input[7], T10), False)
+        s1 = Element([],[0],[])
+        s2 = Element([ResetTimedword('a',0,True)],[-1],[])
+        s3 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True)],[1],[])
 
-    #     # T11 = add_ctx(ctx5.tws,T10,AA)
-    #     # T11.show()
-    #     # print("--------------------------------------------------")
-    #     # prepared = T11.is_prepared(AA)
-    #     # print(prepared)
-    #     # FA6,sink = to_fa(T11, 6)
-    #     # H6 = fa_to_ota(FA6,sink,sigma,6)
-    #     # H6.show()
-    #     # print("--------------------------------------------------")
-    #     # flag6, ctx6 = equivalence_query(max_time_value,AA,H6)
-    #     # print(flag6)
+        r1 = Element([ResetTimedword('b',0,True)],[-1],[])
+        r2 = Element([ResetTimedword('a',0,True),ResetTimedword('a',0,True)],[-1],[])
+        r3 = Element([ResetTimedword('a',0,True),ResetTimedword('b',0,True)],[-1],[])
+        r4 = Element([ResetTimedword('a',1,False)],[0],[])
+        r5 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True),ResetTimedword('a',0,False)],[0],[])
+        r6 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True),ResetTimedword('b',0,True)],[-1],[])
+        r7 = Element([ResetTimedword('b',2,True)],[-1],[])
 
-    # def test2(self):
-    #     A, _ = buildOTA('example2.json', 's')
-    #     AA = buildAssistantOTA(A, 's')  # Assist
-    #     max_time_value = AA.max_time_value()
-    #     sigma = AA.sigma
+        new_S = [s1,s2,s3]
+        new_R = [r1,r2,r3,r4,r5,r6,r7]
+        for s in new_S:
+            self.assertEqual(AA.is_accepted_delay(dRTWs_to_lRTWs(s.tws)),s.value[0])
+        for r in new_R:
+            self.assertEqual(AA.is_accepted_delay(dRTWs_to_lRTWs(r.tws)),r.value[0])
+        new_E = []
+        T5 = OTATable(new_S,new_R,new_E,parent=-1,reason="test")
+        # T5.show()
+        print("-----------is consistent----------------")
+        flag, new_a, new_e_index, i, j, reset_i, reset_j = T5.is_consistent()
+        self.assertEqual(flag, False)
+        self.assertEqual(new_a, [ResetTimedword('b',2,True)])
+        self.assertEqual(new_e_index,0)
+        self.assertEqual(i,0)
+        self.assertEqual(j,6)
+        self.assertEqual(reset_i, True)
+        #print(flag, new_a, new_e_index, i, j, reset)
 
-    #     T1 = init_table(sigma, AA)
-    #     T1.show()
-    #     print("--------------------------------------------------")
-    #     flag_closed, new_S, new_R, move = T1.is_closed()
-    #     #print(flag_closed)
-    #     T2 = make_closed(new_S, new_R, move, T1, sigma, AA)
-    #     T2.show()
-    #     print("--------------------------------------------------")
-    #     FA1,sink = to_fa(T2, 1)
-    #     FA1.show()
-    #     print("--------------------------------------------------")
-    #     H1 = fa_to_ota(FA1,sink, AA.sigma, 1)
-    #     H1.show()
-    #     print("--------------------------------------------------")
-    #     flag1, dtw1 = equivalence_query_normal(max_time_value,AA,H1)
-    #     print(flag1)
-    #     print("--------------------------!!----------------------")
-    #     print(dtw1.tws)
-    #     tables = add_ctx_normal(dtw1.tws,T2,AA)
-    #     for table, i in zip(tables, range(1, len(tables)+1)):
-    #         print("------------"+ str(i)+"-----------------------")
-    #         table.show()
-    #     #T3 = add_ctx(ctx1.tws,T2,AA)
-    #     #T3.show()
+    def test_make_consistent(self):
+        A = buildOTA('example2.json', 's')
+        AA = buildAssistantOTA(A, 's')  # Assist
+        max_time_value = AA.max_time_value()
+        sigma = AA.sigma
+
+        s1 = Element([],[0],[])
+        s2 = Element([ResetTimedword('a',0,True)],[-1],[])
+        s3 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True)],[1],[])
+
+        r1 = Element([ResetTimedword('b',0,True)],[-1],[])
+        r2 = Element([ResetTimedword('a',0,True),ResetTimedword('a',0,True)],[-1],[])
+        r3 = Element([ResetTimedword('a',0,True),ResetTimedword('b',0,True)],[-1],[])
+        r4 = Element([ResetTimedword('a',1,False)],[0],[])
+        r5 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True),ResetTimedword('a',0,False)],[0],[])
+        r6 = Element([ResetTimedword('a',1,False),ResetTimedword('b',2,True),ResetTimedword('b',0,True)],[-1],[])
+        r7 = Element([ResetTimedword('b',2,True)],[-1],[])
+
+        new_S = [s1,s2,s3]
+        new_R = [r1,r2,r3,r4,r5,r6,r7]
+        new_E = []
+        T5 = OTATable(new_S,new_R,new_E,parent=-1,reason="test")
+        # T5.show()
+        print("-----------make consistent----------------")
+        flag, new_a, new_e_index, i, j, reset_i, reset_j = T5.is_consistent()
+        self.assertEqual(flag, False)
+        tables = make_consistent(new_a, new_e_index, i, j, reset_i, reset_j, T5, sigma, AA)
+        for tb in tables:
+            S_U_R = [s for s in tb.S] + [r for r in tb.R]
+            self.assertEqual(S_U_R[i].suffixes_resets[-1], [None])
+            self.assertEqual(S_U_R[j].suffixes_resets[-1], [None])
+        # print(len(tables))
+        # tables[0].show()
+        # print("-----------")
+        # tables[1].show()
+        # print("-----------")
+        # tables[2].show()
+        # print("-----------")
+        # tables[100].show()
+
+    def test_guess_resets_in_suffixes(self):
+        A = buildOTA('example6.json', 's')
+        AA = buildAssistantOTA(A, 's')  # Assist
+        #max_time_value = AA.max_time_value()
+        sigma = AA.sigma
+
+        T1_tables = init_table_normal(sigma, AA)
+        T1_table_0 = T1_tables[0]
+        test_E = [[Timedword('a',2),Timedword('b',3),Timedword('a',1)],[Timedword('b',2),Timedword('a',4)],[Timedword('a',5)]]
+        T1_table_0.E = test_E
+        suffixes_resets = guess_resets_in_suffixes(T1_table_0)
+        self.assertEqual(len(suffixes_resets), 8)
+        self.assertEqual(len(suffixes_resets[5]), 3)
+        # for resets_situtation in suffixes_resets:
+        #     print(resets_situtation)
+
+    def test_guess_resets_in_newsuffix(self):
+        A = buildOTA('example6.json', 's')
+        AA = buildAssistantOTA(A, 's')  # Assist
+        #max_time_value = AA.max_time_value()
+        sigma = AA.sigma
+
+        T1_tables = init_table_normal(sigma, AA)
+        T1_table_0 = T1_tables[0]
+        test_E = [[Timedword('a',2),Timedword('b',3),Timedword('a',1)],[Timedword('b',2),Timedword('a',4)]]
+        T1_table_0.E = test_E
+        suffixes_resets = guess_resets_in_newsuffix(T1_table_0, 0, 0, True, True, AA)
+        self.assertEqual(len(suffixes_resets),1)
+        self.assertEqual(len(suffixes_resets[0]), 4)
+        self.assertEqual(suffixes_resets[0],[[True,None],[True,None],[True,None],[True,None]])
+
+        test_E = [[Timedword('a',2),Timedword('b',3),Timedword('a',1)]]
+        T1_table_0.E = test_E
+        suffixes_resets = guess_resets_in_newsuffix(T1_table_0, 0, 0, True, True, AA)
+        self.assertEqual(len(suffixes_resets),256)
+        self.assertEqual(len(suffixes_resets[34]), 4)
+        self.assertEqual(suffixes_resets[1],[[True,True,None],[True,True,None],[True,True,None],[True,False,None]])
+
+    def test_add_ctx_normal(self):
+        experiments_path = os.path.dirname(os.getcwd())+"/experiments/"
+        A = buildOTA(experiments_path+'example3.json', 's')
+        AA = buildAssistantOTA(A, 's')
+        sigma = AA.sigma
+        max_time_value = AA.max_time_value()
+
+        H = buildOTA(experiments_path+'example3_1.json', 'q')
+        HH = buildAssistantOTA(H, 'q')
+
+        # AA.show()
+        # print("------------------------------")
+        # HH.show()
+        # print("------------------------------")
+        # H.show()
+        flag, ctx = equivalence_query_normal(max_time_value,AA,HH)
+        # print("-------------ctx-----------------")
+        # print(ctx.tws)
+        ctxs = guess_ctx_reset(ctx.tws,AA)
+        # print(len(ctxs))
+        # for rtws in ctxs:
+        #     print(rtws)
+        # print("-------------local tws-----------------")
+        for ctx in ctxs:
+            local_tws = dRTWs_to_lRTWs(ctx)
+            normalize(local_tws)
+        #     #if check_guessed_reset(local_tws, table) == True:
+        #     print(ctx)
+        #     print(local_tws)
+        #     pref = prefixes(local_tws)
+        #     for tws in pref:
+        #         print(tws)
+        #     print("-------------------")
+        
+        T1_tables = init_table_normal(sigma, AA)
+        T1_table_0 = T1_tables[0]
+        test_E = [[Timedword('b',2),Timedword('a',4)],[Timedword('a',5)]]
+        T1_table_0.E = test_E
+        # T1_table_0.show()
+        # print("----------------------------------------")
+        # tables = add_ctx_normal(ctx, T1_table_0, AA)
+        #self.assertEqual(len(tables),65536)
+        # tables[0].show()
+        # tables[1].show()
+        # tables[2].show()
+        # tables[100].show()
+        # tables[4095].show()
+        # for table in tables:
+        #     table.show()
+        #     print("---------------------")
+
+        T1_tables = init_table_normal(sigma, AA)
+        T1_table_0 = T1_tables[0]
+        test_E = [[Timedword('b',2),Timedword('a',4)]]
+        T1_table_0.E = test_E
+        # T1_table_0.show()
+        # print("----------------------------------------")
+        tables = add_ctx_normal(ctx, T1_table_0, AA)
+        self.assertEqual(len(tables),128)
+        # print(len(tables))
+        # tables[0].show()
+        # tables[1].show()
+        # tables[2].show()
+        # tables[100].show()
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,7 @@ Q4 = Location("4", False, False, 'q')
 s1 = State(L1, 0.0)
 s2 = State(L1, 0.3)
 
-A, _ = buildOTA('a.json', 's')
+A = buildOTA('a.json', 's')
 AA = buildAssistantOTA(A, 's')  # Assist
 
 class EquivalenceTest(unittest.TestCase):
@@ -87,9 +87,44 @@ class EquivalenceTest(unittest.TestCase):
         #print(rtw1)
 
     def testcase1(self):
-        ota1, _ = buildOTA('test.json', 's')
+        ota1 = buildOTA('test.json', 's')
         c_ota1 = buildAssistantOTA(ota1, 's')
         c_ota1.show()
+
+    def testRunDelaytimedwords(self):
+        tws0 = []
+        tws1 = [Timedword('a',0.5)]
+        tws2 = [Timedword('b',1), Timedword('a',0)]
+        tws3 = [Timedword('a',2),Timedword('b',0)]
+        tws4 = [Timedword('a',1),Timedword('b',3.5)]
+        tws5 = [Timedword('a',1.5),Timedword('b',1.5),Timedword('a',2)]
+        self.assertEqual(AA.run_delaytimedwords(tws0),(True,'1'))
+        self.assertEqual(AA.is_accepted_delay(tws0),0)
+        self.assertEqual(AA.run_delaytimedwords(tws1),(True,'4'))
+        self.assertEqual(AA.is_accepted_delay(tws1),-1)
+        self.assertEqual(AA.run_delaytimedwords(tws2),(True,'4'))
+        self.assertEqual(AA.is_accepted_delay(tws2),-1)
+        self.assertEqual(AA.run_delaytimedwords(tws3),(True,'3'))
+        self.assertEqual(AA.is_accepted_delay(tws3),1)
+        self.assertEqual(AA.run_delaytimedwords(tws4),(True,'4'))
+        self.assertEqual(AA.is_accepted_delay(tws4),-1)
+        self.assertEqual(AA.run_delaytimedwords(tws5),(True,'2'))
+        self.assertEqual(AA.is_accepted_delay(tws5),0)
+    
+    def test_dRTWs_to_lRTWs(self):
+        ctx1 = [ResetTimedword('a',1, False),ResetTimedword('b',3, True),ResetTimedword('a',1,False),ResetTimedword('b',0,False)]
+        self.assertEqual(dRTWs_to_lRTWs(ctx1), [ResetTimedword('a',1,False),ResetTimedword('b',4,True),ResetTimedword('a',1,False),ResetTimedword('b',1,False)])
+
+    def test_lRTWs_to_DTWs(self):
+        ctx1 = [Timedword('a',1),Timedword('b',3),Timedword('a',1),Timedword('b',0)]
+        lrtws1 = [ResetTimedword('a',1,False),ResetTimedword('b',4,False),ResetTimedword('a',5,False),ResetTimedword('b',5,False)]
+        lrtws2 = [ResetTimedword('a',1,True),ResetTimedword('b',3,False),ResetTimedword('a',4,False), ResetTimedword('b',4,False)]
+        lrtws3 = [ResetTimedword('a',1,True),ResetTimedword('b',3,True),ResetTimedword('a',1,False), ResetTimedword('b',1,False)]
+        lrtws4 = [ResetTimedword('a',1,True),ResetTimedword('b',3,True),ResetTimedword('a',1,True), ResetTimedword('b',0,True)]
+        self.assertEqual(lRTWs_to_DTWs(lrtws1),ctx1)
+        self.assertEqual(lRTWs_to_DTWs(lrtws2),ctx1)
+        self.assertEqual(lRTWs_to_DTWs(lrtws3),ctx1)
+        self.assertEqual(lRTWs_to_DTWs(lrtws4),ctx1)
 
 if __name__ == "__main__":
     unittest.main()

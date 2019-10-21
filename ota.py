@@ -75,7 +75,7 @@ class OTATran(object):
         self.target = target
         self.flag = flag
     def is_pass(self, tw):
-        """Determine whether the timeword tw can pass the transition.
+        """Determine whether local(logical) timeword tw can pass the transition.
         """
         # - means empty
         #if tw.action == "-":
@@ -134,6 +134,10 @@ class OTA(object):
         self.initstate_name = init
         self.accept_names = accepts or []
         self.sink_name = ""
+
+        self.membership_query = dict()
+        self.mem_query_num = 0
+        self.equiv_query_num = 0
     
     def max_time_value(self):
         """
@@ -169,7 +173,7 @@ class OTA(object):
         return None
 
     def is_accepted(self, tws):
-        """Determine whether the OTA accepts a timed words or not.
+        """Determine whether the OTA accepts a local(logical) timed words or not.
         """
         if len(tws) == 0:
             if self.initstate_name in self.accept_names:
@@ -192,37 +196,57 @@ class OTA(object):
             else:
                 return 0
     
-    # def is_accepted_reset(self, tws):
-    #     """Determine whether the OTA accepts a reset timed words or not.
-    #     """
-    #     if len(tws) == 0:
-    #         if self.initstate_name in self.accept_names:
-    #             return 1
-    #         else:
-    #             return 0
-    #     else:
-    #         current_statename = self.initstate_name
-    #         for tw in tws:
-    #             flag = False
-    #             for tran in self.trans:
-    #                 if tran.source == current_statename and tran.is_pass_reset(tw):
-    #                     current_statename = tran.target
-    #                     flag = True
-    #                     break
-    #             if flag == False:
-    #                 return -1
-    #         if current_statename in self.accept_names:
-    #             return 1
-    #         else:
-    #             return 0
-    def is_accepted_reset(self, tws):
-        current_statename = self.run_resettimedwords(tws)
-        if current_statename == self.sink_name:
-            return -1
-        elif current_statename in self.accept_names:
-            return 1
+    def run_delaytimedwords(self, tws):
+        """Run a delay timed words, return the final location name.
+        """
+        length = len(tws)
+        #print("---tws----")
+        #print(tws)
+        if length == 0:
+            return True, self.initstate_name
         else:
-            return 0
+            current_statename = self.initstate_name
+            current_clock_valuation = 0
+            reset = True
+            for tw in tws:
+                if reset == False:
+                    current_clock_valuation = current_clock_valuation + tw.time
+                else:
+                    current_clock_valuation = tw.time
+                flag = False
+                for tran in self.trans:
+                    if current_statename == tran.source and tran.is_pass(Timedword(tw.action,current_clock_valuation)):
+                        current_statename = tran.target
+                        reset = tran.reset
+                        flag = True
+                        if current_statename == self.sink_name:
+                            return True, self.sink_name
+                        break
+                if flag == False:
+                    #raise NotImplementedError("run_delaytimedwords: an unhandle delaytimedword!")
+                    return False, ""
+                else:
+                    pass
+            return True, current_statename
+
+    def is_accepted_delay(self, tws):
+        self.mem_query_num += 1
+        tws = tuple(tws)
+        if tws in self.membership_query:
+            return self.membership_query[tws]
+
+        flag, current_statename = self.run_delaytimedwords(tws)
+        if flag == False:
+            res = -2
+        elif current_statename == self.sink_name:
+            res = -1
+        elif current_statename in self.accept_names:
+            res = 1
+        else:
+            res = 0
+        
+        self.membership_query[tws] = res
+        return res
 
     def run_resettimedwords(self,tws):
         """Run a resettimedwords, return the final location.
@@ -286,6 +310,9 @@ class Timedword(object):
         else:
             return False
 
+    def __hash__(self):
+        return hash((self.action, self.time))
+
     def show(self):
         return '(' + self.action + ',' + str(self.time) + ')'
     
@@ -308,6 +335,9 @@ class ResetTimedword(Timedword):
             return 'R'
         else:
             return 'N'
+    
+    def __hash__(self):
+        return hash((self.action, self.time, self.reset))
 
     def show(self):
         return '(' + self.action + ',' + str(self.time) + ',' + self.resetflag() + ')'
@@ -326,7 +356,7 @@ class ResetTimedword(Timedword):
 def dRTWs_to_lRTWs(delay_resettimedwords):
     """Given a delay reset-timedwords, return the local reset-timedwords.
     """
-    reset = False
+    reset = True
     current_clock_valuation = 0
     local_resettimedwords = []
     for drtw in delay_resettimedwords:
@@ -337,6 +367,24 @@ def dRTWs_to_lRTWs(delay_resettimedwords):
         local_resettimedwords.append(ResetTimedword(drtw.action,current_clock_valuation,drtw.reset))
         reset = drtw.reset
     return local_resettimedwords
+
+def lRTWs_to_DTWs(logical_resettimedwords):
+    """Given a logical(local) reset-timedwords, renturn a delay timed words.
+    """
+    reset = True
+    delay_time = 0
+    current_clock_valuation = 0
+    delay_timedwords = []
+    for lrtw in logical_resettimedwords:
+        assert reset is not None
+        if reset == True:
+            delay_time = lrtw.time
+        else:
+            delay_time = lrtw.time - current_clock_valuation
+        delay_timedwords.append(Timedword(lrtw.action, delay_time))
+        reset = lrtw.reset
+        current_clock_valuation = lrtw.time
+    return delay_timedwords
 
 def is_valid_rtws(rtws):
     """Given a clock-valuation timedwords with reset-info, determin its validation.
@@ -391,7 +439,7 @@ def buildOTA(jsonfile, otaflag):
             ota_tran = OTATran(tran_id, source, label, constraints_list, reset, target, otaflag)
             trans += [ota_tran]
         trans.sort(key=lambda x: x.id)
-        return OTA(name, sigma, L, trans, initstate, accept_list), sigma
+        return OTA(name, sigma, L, trans, initstate, accept_list)
 
 def buildAssistantOTA(ota, otaflag):
     """

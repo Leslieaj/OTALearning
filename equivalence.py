@@ -591,9 +591,16 @@ def equivalence_query(max_time_value, teacher, hypothesis):
         else:
             return True, None
 
-def equivalence_query_normal(max_time_value, teacher, hypothesis):
+def equivalence_query_normal(max_time_value, teacher, hypothesis, prev_ctx=None):
     """Normal teacher
     """
+    if prev_ctx is not None:
+        for ctx in prev_ctx:
+            teacher_res = teacher.is_accepted_delay(ctx.tws)
+            hypothesis_res = hypothesis.is_accepted_delay(ctx.tws)
+            if teacher_res != hypothesis_res and hypothesis_res != -2:
+                return False, ctx
+
     flag_pos, w_pos = ota_inclusion(max_time_value, hypothesis, teacher)
     if flag_pos == False:
         dtw_pos = findDelayTimedwords(w_pos, 's', teacher.sigma)

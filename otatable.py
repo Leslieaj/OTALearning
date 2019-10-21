@@ -1,15 +1,15 @@
 # The definitions on the OTA observation table.
 
 import copy
-from ota import Timedword, ResetTimedword, is_valid_rtws, dRTWs_to_lRTWs
-#from fa import *
+from ota import Timedword, ResetTimedword, is_valid_rtws, dRTWs_to_lRTWs, lRTWs_to_DTWs
 
 class Element(object):
     """The definition of the element in OTA observation table.
     """
-    def __init__(self, tws=[], value=[]):
+    def __init__(self, tws=[], value=[], suffixes_resets=[]):
         self.tws = tws or []
         self.value = value or []
+        self.suffixes_resets = suffixes_resets or []
     
     def __eq__(self, element):
         if self.tws == element.tws and self.value == element.value:
@@ -36,37 +36,47 @@ class Element(object):
         return state_name
 
     def show(self):
-        return [tw.show() for tw in self.tws], self.value
+        return [tw.show() for tw in self.tws], self.value, self.suffixes_resets
+
+table_id = 0
 
 class OTATable(object):
     """The definition of OTA observation table.
     """
-    def __init__(self, S = None, R = None, E=[]):
+    def __init__(self, S = None, R = None, E=[], *, parent, reason):
+        global table_id
         self.S = S
         self.R = R
         self.E = E #if E is empty, it means that there is an empty action in E.
-    
-    def is_prepared(self, ota):
-        flag_closed, new_S, new_R, move = self.is_closed()
-        flag_consistent, new_a, new_e_index = self.is_consistent()
-        flag_evid_closed, new_added = self.is_evidence_closed(ota)
-        #if flag_closed == True and flag_consistent == True: #and flag_evid_closed == True:
-        if flag_closed == True and flag_consistent == True and flag_evid_closed == True:
-            return True
-        else:
-            return False
+        self.id = table_id
+        table_id += 1
+        self.parent = parent
+        self.reason = reason
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def effective_len(self):
+        count = 0
+        for S in self.S:
+            if S.value[0] != -1:
+                count += 1
+        for R in self.R:
+            if R.value[0] != -1:
+                count += 1
+        return count
 
     def is_closed(self):
         """ 1. determine whether the table is closed.
-               For each r \in R there exists s \in S such that row(s) = row(r).
+               For each r in R there exists s in S such that row(s) = row(r).
             2. return four values, the first one is a flag to show closed or not, 
                the second one is the new S and the third one is the new R,
-               the last one is the list of elements moved from R to S.
+               the last one is the element moved from R to S.
         """
         new_S = [s for s in self.S]
         new_R = [r for r in self.R]
         new_S_rows = [s.row() for s in new_S]
-        move = []
+        move = None
         for r in self.R:
             flag = False
             for s in self.S:
@@ -77,19 +87,19 @@ class OTATable(object):
                 if r.row() not in new_S_rows:
                     new_S.append(r)
                     new_R.remove(r)
-                    move.append(r)
-                    new_S_rows = [s.row() for s in new_S]
+                    move = copy.deepcopy(r)
+                    break
+                    #new_S_rows = [s.row() for s in new_S]
         if len(new_S) > len(self.S):
             return False, new_S, new_R, move
         else:
-            return True, new_S, new_R, move      
+            return True, new_S, new_R, move  
 
     def is_consistent(self):
         """Determine whether the table is consistent.
             (if tws1,tws2 in S U R, if a in sigma* tws1+a, tws2+a in S U R and row(tws1) = row(tws2), 
             then row(tws1+a) = row(tws2+a))
         """
-        flag = True
         new_a = None
         new_e_index = None
         table_element = [s for s in self.S] + [r for r in self.R]
@@ -98,32 +108,30 @@ class OTATable(object):
                 if table_element[i].row() == table_element[j].row():
                     temp_elements1 = []
                     temp_elements2 = []
-                    #print len(table_element[2].tws), [tw.show() for tw in table_element[2].tws]
                     for element in table_element:
-                        #print "element", [tw.show() for tw in element.tws]
-                        if is_prefix(element.tws, table_element[i].tws):
-                            new_element1 = Element(delete_prefix(element.tws, table_element[i].tws), [v for v in element.value])
+                        if len(element.tws) == len(table_element[i].tws) + 1 and \
+                           element.tws[:-1] == table_element[i].tws:
+                            new_element1 = Element([element.tws[-1]], [v for v in element.value], [])
                             temp_elements1.append(new_element1)
-                        if is_prefix(element.tws, table_element[j].tws):
-                            #print "e2", [tw.show() for tw in element.tws]
-                            new_element2 = Element(delete_prefix(element.tws, table_element[j].tws), [v for v in element.value])
+                        if len(element.tws) == len(table_element[j].tws) + 1 and \
+                           element.tws[:-1] == table_element[j].tws:
+                            new_element2 = Element([element.tws[-1]], [v for v in element.value], [])
                             temp_elements2.append(new_element2)
                     for e1 in temp_elements1:
                         for e2 in temp_elements2:
-                            #print [tw.show() for tw in e1.tws], [tw.show() for tw in e2.tws]
-                            #if len(e1.tws) == 1 and len(e2.tws) == 1 and e1.tws == e2.tws:
-                            if len(e1.tws) == 1 and len(e2.tws) == 1 and e1.tws[0].action == e2.tws[0].action and e1.tws[0].time == e2.tws[0].time:
-                                if e1.row() == e2.row():
-                                    pass
-                                else:
-                                    flag = False
+                            assert len(e1.tws) == 1 and len(e2.tws) == 1
+                            if e1.tws[0].action == e2.tws[0].action and e1.tws[0].time == e2.tws[0].time:
+                                if e1.row() != e2.row():
                                     new_a = e1.tws
-                                    for i in range(0, len(e1.value)):
-                                        if e1.value[i] != e2.value[i]:
-                                            new_e_index = i
-                                            return flag, new_a, new_e_index
-        return flag, new_a, new_e_index
-    
+                                    for k in range(0, len(e1.value)):
+                                        if e1.value[k] != e2.value[k]:
+                                            new_e_index = k
+                                            reset_i = e1.tws[0].reset
+                                            reset_j = e2.tws[0].reset
+                                            return False, new_a, new_e_index, i, j, reset_i, reset_j
+
+        return True, new_a, new_e_index, i, j, True, True
+
     def is_evidence_closed(self, ota):
         """Determine whether the table is evidence-closed.
         """
@@ -167,7 +175,7 @@ class OTATable(object):
                         table_tws.append(pref)
                         #table_tws = [tws for tws in table_tws] + [pref]
                         new_tws = [tws for tws in pref]
-                        new_element = Element(new_tws,[])
+                        new_element = Element(new_tws,[]) #---------------todo------------------
                         new_added.append(new_element)
         if len(new_added) > 0:
             flag = False
@@ -176,173 +184,109 @@ class OTATable(object):
     def show(self):
         print("new_S:"+str(len(self.S)))
         for s in self.S:
-            print(s.tws, s.row())
+            print(s.tws, s.row(), s.suffixes_resets)
         print("new_R:"+str(len(self.R)))
         for r in self.R:
-            print(r.tws, r.row())
+            print(r.tws, r.row(), r.suffixes_resets)
         print("new_E:"+str(len(self.E)))
         for e in self.E:
             print(e)
 
 def make_closed(new_S, new_R, move, table, sigma, ota):
-    """The function makes the table closed, if the table is not closed.
+    """Make table closed.
     """
-    #flag, new_S, new_R, move = table.is_closed()
     new_E = table.E
-    closed_table = OTATable(new_S, new_R, new_E)
+    closed_table = OTATable(new_S, new_R, new_E, parent=table.id, reason="makeclosed")
     table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
-    for s in move:
-        s_tws = [tw for tw in s.tws]
-        for action in sigma:
-            #new_tw = get_TW_delay_zero(s_tws, action, ota)
-            new_tw, value = new_rtw_in_closed(s_tws,action,ota)
-            temp_tws = s_tws+[new_tw]
-            if temp_tws not in table_tws:
-                temp_element = Element(temp_tws,[value])
-                fill(temp_element, closed_table.E, ota)
-                closed_table.R.append(temp_element)
-                table_tws = [s.tws for s in closed_table.S] + [r.tws for r in closed_table.R]
-    return closed_table
+    temp_resets = [[]]
+    for i in range(0,len(sigma)):
+        dtws = lRTWs_to_DTWs(move.tws)
+        res = ota.is_accepted_delay(dtws + [Timedword(sigma[i], 0)])
+        if res == -1:
+            guesses = [True]
+        else:
+            guesses = [True, False]
 
-def make_consistent(new_a, new_e_index, table, sigma, ota):
-    #flag, new_a, new_e_index = table.is_consistent()
-    #print flag
+        new_situations = []
+        for guess in guesses:
+            new_rtw = ResetTimedword(sigma[i], 0, guess)
+            for situation in temp_resets:
+                temp = copy.deepcopy(situation) + [new_rtw]
+                new_situations.append(temp)
+        temp_resets = new_situations
+
+    OTAtables = []
+    for situation in temp_resets:
+        new_rs = []
+        for new_rtw in situation:
+            new_r = [tw for tw in move.tws] + [new_rtw]
+            if new_r not in table_tws:
+                new_rs.append(Element(new_r,[],[]))
+        temp_R = [r for r in new_R] + new_rs
+        temp_table = OTATable(new_S, temp_R, new_E, parent=table.id, reason="makeclosed")
+        OTAtables.append(temp_table)
+
+    #guess the resets of suffixes for each prefix and fill
+    OTAtables_after_guessing_resets = []
+    for otatable in OTAtables:
+        new_r_start_index = len(new_R)
+        new_r_end_index = len(otatable.R)
+        temp_otatables = [otatable]
+        #print(new_r_start_index, new_r_end_index)
+        for i in range(new_r_start_index, new_r_end_index):
+            res = get_empty_E(otatable.R[i], ota)
+            if res == -1:
+                resets_situations = guess_resets_in_suffixes(otatable, to_guess=False)
+            else:
+                resets_situations = guess_resets_in_suffixes(otatable)
+            resets_situations = guess_resets_in_suffixes(otatable)
+            new_tables = []
+            for j in range(0, len(resets_situations)):
+                for temp_table in temp_otatables:
+                    new_table = copy.deepcopy(temp_table)
+                    temp_otatable = OTATable(new_table.S, new_table.R, new_table.E, parent=table.id, reason="makeclosed")
+                    temp_otatable.R[i].suffixes_resets = resets_situations[j]
+                    new_table = copy.deepcopy(temp_otatable)
+                    if True == fill(new_table.R[i],new_table.E,ota):
+                        new_tables.append(new_table)
+            temp_otatables = [tb for tb in new_tables]
+        OTAtables_after_guessing_resets = OTAtables_after_guessing_resets + temp_otatables
+    return OTAtables_after_guessing_resets
+
+def make_consistent(new_a, new_e_index, fix_reset_i, fix_reset_j, reset_i, reset_j, table, sigma, ota):
+    """Make table consistent.
+    """
     new_E = [tws for tws in table.E]
-    #new_E = copy.deepcopy(table.E)
     new_e = [Timedword(tw.action,tw.time) for tw in new_a]
     if new_e_index > 0:
         e = table.E[new_e_index-1]
         new_e.extend(e)
     new_E.append(new_e)
-    new_S = [s for s in table.S]
-    new_R = [r for r in table.R]
-    for i in range(0, len(new_S)):
-        fill(new_S[i], new_E, ota)
-    for j in range(0, len(new_R)):
-        fill(new_R[j], new_E, ota)
-    consistent_table = OTATable(new_S, new_R, new_E)
-    return consistent_table
-
-def make_evidence_closed(new_added, table, sigma, ota):
-    for i in range(0,len(new_added)):
-        fill(new_added[i], table.E, ota)
-    new_E = [e for e in table.E]
-    new_R = [r for r in table.R] + [nr for nr in new_added]
-    new_S = [s for s in table.S]
-    evidence_closed_table = OTATable(new_S, new_R, new_E)
-    return evidence_closed_table
-
-def get_TW_delay_zero(tws, action, ota):
-    """When move a timedwords tws from R to S, generate the new delay timedwords with reset information with delay 0.
-    """
-    new_timedword = None
-    #local_tws = dRTWs_to_lRTWs(tws)
-    local_tws = tws
-    if tws[len(local_tws)-1].reset == False:
-        new_timedword = Timedword(action,tws[len(local_tws)-1].time)
-    else:
-        new_timedword = Timedword(action,0)
-    source_location_name = ota.run_resettimedwords(local_tws)
-    new_resettimedword = None
-    for otatran in ota.trans:
-        if otatran.source == source_location_name and otatran.is_pass(new_timedword):
-            new_resettimedword = ResetTimedword(action,new_timedword.time,otatran.reset)
-            # return the delay timed words with reset information
-            #new_resettimedword = ResetTimedword(action,0,otatran.reset)
-            break
-    return new_resettimedword
-
-def new_rtw_in_closed(tws, action, ota):
-    if is_valid_rtws(tws) == False:
-        return ResetTimedword(action,0,True), -1
-    else:
-        current_statename = ota.run_resettimedwords(tws)
-        current_clock_valuation = 0
-        reset = True
-        if len(tws) > 0:
-            current_clock_valuation = tws[-1].time
-            reset = tws[-1].reset
-        if current_statename == ota.sink_name:
-            return ResetTimedword(action,0,True), -1
-        if reset == False and current_clock_valuation > 0:
-            return ResetTimedword(action,0,True), -1
-        else:
-            flag = False
-            for tran in ota.trans:
-                if tran.source == current_statename and tran.is_pass(Timedword(action,0)):
-                    flag = True
-                    current_statename = tran.target
-                    new_rtw = ResetTimedword(action,0,tran.reset)
-                    if current_statename == ota.sink_name:
-                        return new_rtw, -1
-                    elif current_statename in ota.accept_names:
-                        return new_rtw, 1
-                    else:
-                        return new_rtw, 0
-            if flag == False:
-                raise NotImplementedError("new_rtw_in_closed: an unhandle timedword "+Timedword(action,0).show())
-
-def fill(element, E, ota):
-    """Fill an element in S U R.
-    """
-    #local_tws = dRTWs_to_lRTWs(element.tws)
-    local_tws = element.tws
-    current_location_name = ota.run_resettimedwords(local_tws)
-    if len(element.value) == 0:
-        f = ota.is_accepted_reset(local_tws)
-        element.value.append(f)
-    if current_location_name == ota.sink_name:
-        for i in range(len(element.value)-1, len(E)):
-            element.value.append(-1)
-    else:
-        for i in range(len(element.value)-1, len(E)):
-            current_location = copy.deepcopy(current_location_name)
-            reset = True
-            clock_valuation = 0
-            if len(element.tws) > 0:
-                reset = local_tws[len(local_tws)-1].reset
-                clock_valuation = local_tws[len(local_tws)-1].time
-                if reset == True:
-                    clock_valuation = 0
-            for tw in E[i]:
-                if reset == False and tw.time < clock_valuation:
-                    #element.value.append(-1)
-                    current_location = ota.sink_name
-                    clock_valuation = 0
-                    reset = True
-                    break
+    new_table = OTATable(table.S, table.R, new_E, parent=table.id, reason="makeconsistent")
+    temp_suffixes_resets = guess_resets_in_newsuffix(new_table, fix_reset_i, fix_reset_j, reset_i, reset_j, ota)
+    OTAtables = []
+    for situation in temp_suffixes_resets:
+        temp_situation = []
+        for resets in situation:
+            temp_situation.extend(resets)
+        if temp_situation[fix_reset_i] in (None, reset_i) and temp_situation[fix_reset_j] in (None, reset_j):
+            temp_table = copy.deepcopy(table)
+            temp_table.E = copy.deepcopy(new_E)
+            flag_valid = True
+            for i in range(0,len(situation)):
+                if i < len(table.S):
+                    temp_table.S[i].suffixes_resets.append(situation[i])
+                    if fill(temp_table.S[i],temp_table.E, ota) == False:
+                        flag_valid = False
+                        break
                 else:
-                    flag = False
-                    for otatran in ota.trans:
-                        if otatran.source == current_location and otatran.is_pass(tw):
-                            reset = otatran.reset
-                            clock_valuation = tw.time
-                            if reset == True:
-                                clock_valuation = 0
-                            current_location = otatran.target
-                            flag = True
-                            break
-                    if flag == False:
-                        raise NotImplementedError("fill")
-                    else:
-                        pass
-            if current_location in ota.accept_names:
-                element.value.append(1)
-            elif current_location == ota.sink_name:
-                element.value.append(-1)
-            else:
-                element.value.append(0)
-
-# def fill(element, E, ota):
-#     if len(element.value) == 0:
-#         f = ota.is_accepted_reset(element.tws)
-#         element.value.append(f)
-#     #print len(element.value)-1, len(E)
-#     for i in range(len(element.value)-1, len(E)):
-#         temp_tws = element.tws + E[i]
-#         f = ota.is_accepted_reset(temp_tws)
-#         element.value.append(f)
-
+                    temp_table.R[i-len(temp_table.S)].suffixes_resets.append(situation[i])
+                    if fill(temp_table.R[i-len(temp_table.S)],temp_table.E, ota) == False:
+                        flag_valid = False
+                        break
+            if flag_valid:
+                OTAtables.append(temp_table)
+    return OTAtables
 
 def prefixes(tws):
     """Return the prefixes of a timedwords. [tws1, tws2, tws3, ..., twsn]
@@ -352,123 +296,6 @@ def prefixes(tws):
         temp_tws = tws[:i]
         prefixes.append(temp_tws)
     return prefixes
-
-def is_prefix(tws, pref):
-    """Determine whether the pref is a prefix of the timedwords tws
-    """
-    if len(pref) == 0:
-        return True
-    else:
-        if len(tws) < len(pref):
-            return False
-        else:
-            for i in range(0, len(pref)):
-                if tws[i] == pref[i]:
-                    pass
-                else:
-                    return False
-            return True
-
-def delete_prefix(tws, pref):
-    """Delete a prefix of timedwords tws, and return the new tws
-    """
-    if len(pref) == 0:
-        return [tw for tw in tws]
-    else:
-        new_tws = tws[len(pref):]
-        return new_tws
-
-def fix_resets(ctx, ota):
-    #print(ctx)
-    new_tws = [Timedword(rtw.action,rtw.time) for rtw in ctx]
-    #print(new_tws)
-    dRTWs = []
-    current_location = ota.initstate_name
-    current_clock_valuation = 0
-    reset = True
-    for tw in new_tws:
-        if reset == False:
-            current_clock_valuation = current_clock_valuation + tw.time
-        else:
-            current_clock_valuation = tw.time
-        for tran in ota.trans:
-            if tran.source == current_location and tran.is_pass(Timedword(tw.action,current_clock_valuation)):
-                dRTWs.append(ResetTimedword(tw.action,tw.time,tran.reset))
-                current_location = tran.target
-                reset = tran.reset
-                break
-    return dRTWs
-
-def add_ctx(ctx, table, ota):
-    """Given a counterexample ctx, add it and its prefixes to R (except those already present in S and R)
-    """
-    #print(ctx)
-    #print(fix_resets(ctx,ota))
-    #local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
-    local_tws = dRTWs_to_lRTWs(ctx)
-    normalize(local_tws)
-    print(local_tws)
-    #local_tws = dRTWs_to_lRTWs(ctx)
-    pref = prefixes(local_tws)
-    S_tws = [s.tws for s in table.S]
-    S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
-    new_S = [s for s in table.S]
-    new_R = [r for r in table.R]
-    new_E = [e for e in table.E]
-    for tws in pref:
-        need_add = True
-        for stws in S_R_tws:
-        #for stws in S_tws:
-            #if tws_equal(tws, stws):
-            if tws == stws:
-                need_add = False
-                break
-        if need_add == True:
-            temp_element = Element(tws,[])
-            fill(temp_element, new_E, ota)
-            new_R.append(temp_element)
-    return OTATable(new_S, new_R, new_E)
-
-def normalize(tws):
-    """Normalize the ctx.
-    """
-    for rtw in tws:
-        if isinstance(rtw.time, int) == True:
-            pass
-        else:
-            integer, frac = str(rtw.time).split('.')
-            if frac == '0':
-                rtw.time = int(integer)
-            else:
-                rtw.time = float(integer + '.1')
-
-def init_table(sigma, ota):
-    S = [Element([],[])]
-    R = []
-    E = []
-    for s in S:
-        if ota.initstate_name in ota.accept_names:
-            s.value.append(1)
-        else:
-            s.value.append(0)
-    for action in sigma:
-        new_tw = Timedword(action, 0)
-        new_element = None
-        for tran in ota.trans:
-            if tran.source == ota.initstate_name and tran.is_pass(new_tw):
-                new_rtw = ResetTimedword(new_tw.action,new_tw.time,tran.reset)
-                new_value = []
-                if tran.target in ota.accept_names:
-                    new_value = [1]
-                elif tran.target == ota.sink_name:
-                    new_value = [-1]
-                else:
-                    new_value = [0]
-                new_element = Element([new_rtw], new_value)
-                R.append(new_element)
-                break
-    T = OTATable(S, R, E)
-    return T
 
 def init_table_normal(sigma, ota):
     """Initial tables.
@@ -481,48 +308,157 @@ def init_table_normal(sigma, ota):
             s.value.append(1)
         else:
             s.value.append(0)
-    tables = [OTATable(S, R, E)]
+    tables = [OTATable(S, R, E, parent=-1, reason="init")]
     for i in range(0, len(sigma)):
         temp_tables = []
         for table in tables:
             new_tw = Timedword(sigma[i], 0)
-            for tran in ota.trans:
-                if tran.source == ota.initstate_name and tran.is_pass(new_tw):
-                    new_rtw_n = ResetTimedword(new_tw.action, new_tw.time, False)
-                    new_rtw_r = ResetTimedword(new_tw.action, new_tw.time, True)
-                    new_value = []
-                    if tran.target in ota.accept_names:
-                        new_value = [1]
-                    elif tran.target == ota.sink_name:
-                        new_value = [-1]
-                    else:
-                        new_value = [0]
-                    new_element_n = Element([new_rtw_n], new_value)
-                    new_element_r = Element([new_rtw_r], new_value)
-                    temp_R_n = table.R + [new_element_n]
-                    temp_R_r = table.R + [new_element_r]
-                    new_table_n = OTATable(S, temp_R_n, E)
-                    new_table_r = OTATable(S, temp_R_r, E)
-                    temp_tables.append(new_table_n)
-                    temp_tables.append(new_table_r)
-                    break
+            res = ota.is_accepted_delay([new_tw])
+            if res == -1:
+                # Now at sink
+                guesses = [True]
+            else:
+                guesses = [True, False]
+
+            for guess in guesses:
+                new_rtw = ResetTimedword(new_tw.action, new_tw.time, guess)
+                new_element = Element([new_rtw], [res])
+                temp_R = table.R + [new_element]
+                new_table = OTATable(S, temp_R, E, parent=-1, reason="init")
+                temp_tables.append(new_table)
+
         tables = temp_tables
     return tables
 
-def guess_ctx_reset(dtws):
-    """When receiving a counterexample (delay timed word), guess all resets and return all reset delay timed words as ctx candidates.  
+def guess_resets_in_suffixes(table, to_guess=True):
+    """Given a table T, before membership querying, we need to guess the reset in the suffixes.
+    This method is for one element in S or R. 
     """
-    #ctxs = []
+    temp_suffixes_resets = []
+    cur_pos = 0
+    end_pos = []
+    for e in table.E:
+       cur_pos += len(e)
+       end_pos.append(cur_pos)
+    length = cur_pos
+
+    temp_resets = [[]]
+    for i in range(length):
+        temp = []
+        for resets_situation in temp_resets:
+            if i + 1 in end_pos or not to_guess:
+                temp.append(resets_situation + [None])
+            else:
+                temp.append(resets_situation + [True])
+                temp.append(resets_situation + [False])
+        temp_resets = temp
+    for resets_situation in temp_resets:
+        index = 0
+        suffixes_resets = []
+        for e in table.E:
+            e_resets = []
+            for i in range(index, index+len(e)):
+                e_resets.append(resets_situation[i])
+            suffixes_resets.append(e_resets)
+            index = index + len(e)
+        temp_suffixes_resets.append(suffixes_resets)
+    return temp_suffixes_resets
+
+def guess_resets_in_newsuffix(table, fix_reset_i, fix_reset_j, reset_i, reset_j, ota):
+    """When making consistent, guess the resets in the new suffix.
+    """
+    temp_suffixes_resets = []
+    new_e = table.E[-1]
+    new_e_length = len(new_e)
+    S_U_R_length = len(table.S) + len(table.R)
+    length = S_U_R_length * new_e_length
+
+    guesses = []
+    if new_e_length == 1:
+        pass
+    elif new_e_length == 2:
+        for i in range(S_U_R_length):
+            if i < len(table.S):
+                to_sink = table.S[i].value[0]
+            else:
+                to_sink = table.R[i - len(table.S)].value[0]
+
+            if i == fix_reset_i:
+                guesses.append([reset_i])
+            elif i == fix_reset_j:
+                guesses.append([reset_j])
+            elif to_sink == -1:
+                guesses.append([True])
+            else:
+                if i < len(table.S):
+                    prefix = table.S[i].tws
+                else:
+                    prefix = table.R[i - len(table.S)].tws
+                
+                ltwR = prefix + [ResetTimedword(new_e[0].action, new_e[0].time, True),
+                                 ResetTimedword(new_e[1].action, new_e[1].time, None)]
+                ltwN = prefix + [ResetTimedword(new_e[0].action, new_e[0].time, False),
+                                 ResetTimedword(new_e[1].action, new_e[1].time, None)]
+                dtwR = lRTWs_to_DTWs(ltwR)
+                dtwN = lRTWs_to_DTWs(ltwN)
+                res_R = ota.is_accepted_delay(dtwR)
+                res_N = ota.is_accepted_delay(dtwN)
+                if res_R == -2:
+                    guesses.append([False])
+                elif res_N == -2:
+                    guesses.append([True])
+                elif res_R == res_N:
+                    guesses.append([True])
+                else:
+                    guesses.append([True, False])
+    else:
+        for i in range(S_U_R_length):
+            guesses.append([True, False])
+
+    temp_resets = [[]]
+    for i in range(0, length):
+        temp = []
+        for resets_situation in temp_resets:
+            if i // new_e_length < len(table.S):
+                to_sink = table.S[i // new_e_length].value[0]
+            else:
+                to_sink = table.R[i // new_e_length - len(table.S)].value[0]
+            if i % new_e_length == new_e_length - 1:
+                temp.append(resets_situation + [None])
+            else:
+                guess = guesses[i // new_e_length]
+                for g in guess:
+                    temp.append(resets_situation + [g])
+        temp_resets = temp
+    for resets_situation in temp_resets:
+        index = 0
+        suffixes_resets = []
+        for i in range(0, S_U_R_length):
+            e_resets = resets_situation[index : index+new_e_length]
+            suffixes_resets.append(e_resets)
+            index = index + new_e_length
+        temp_suffixes_resets.append(suffixes_resets)
+    return temp_suffixes_resets
+
+def guess_ctx_reset(dtws, ota):
+    """When receiving a counterexample (delay timed word), guess all
+    resets and return all reset delay timed words as ctx candidates.  
+    
+    """
     new_tws = [Timedword(tw.action,tw.time) for tw in dtws]
-    ctxs = [[ResetTimedword(new_tws[0].action, new_tws[0].time, False)], [ResetTimedword(new_tws[0].action, new_tws[0].time, True)]]
-    for i in range(1, len(new_tws)):
+    ctxs = [[]]
+    for i in range(len(new_tws)):
         templist = []
+        res = ota.is_accepted_delay(dtws[:i+1])  # Whether the counterexample leads to the sink
         for rtws in ctxs:
-            temp_n = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, False)] 
-            temp_r = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, True)]
-            templist.append(temp_n)
-            templist.append(temp_r)
-        #ctxs = copy.deepcopy(templist)
+            if res == -1:
+                temp_r = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, True)]
+                templist.append(temp_r)
+            else:
+                temp_n = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, False)] 
+                temp_r = rtws + [ResetTimedword(new_tws[i].action, new_tws[i].time, True)]
+                templist.append(temp_n)
+                templist.append(temp_r)
         ctxs = templist
     return ctxs
 
@@ -544,19 +480,76 @@ def check_guessed_reset(lrtws, table):
                 break
     return True
 
+def normalize(tws):
+    """Normalize the ctx.
+    """
+    for rtw in tws:
+        if isinstance(rtw.time, int) == True:
+            pass
+        else:
+            integer, frac = str(rtw.time).split('.')
+            if frac == '0':
+                rtw.time = int(integer)
+            else:
+                rtw.time = float(integer + '.1')
+
+def build_logical_resettimedwords(element, e, e_index):
+    """build a logical reset timedwords based on an element in S,R and a suffix e in E.
+    """
+    lrtws = [tw for tw in element.tws]
+    temp_suffixes_timedwords = [ResetTimedword(tw.action, tw.time, element.suffixes_resets[e_index][j])
+                                for j, tw in enumerate(e)]
+    lrtws = lrtws + temp_suffixes_timedwords
+    # flag = is_valid_rtws(lrtws)
+    # return lrtws, flag
+    return lrtws, True
+
+def get_empty_E(element, ota):
+    """Return the result of running element on ota."""
+    local_tws = element.tws
+    delay_tws = lRTWs_to_DTWs(local_tws)
+    return ota.is_accepted_delay(delay_tws)
+
+
+def fill(element, E, ota):
+    """Fill an element in S U R.
+    """
+    local_tws = element.tws
+    delay_tws = lRTWs_to_DTWs(local_tws)
+    if len(element.value) == 0:
+        f = ota.is_accepted_delay(delay_tws)
+        if f == -2:
+            return False
+        element.value.append(f)
+
+    for i in range(len(element.value)-1, len(E)):
+        lrtws, flag = build_logical_resettimedwords(element, E[i], i)
+        if flag == True:
+            delay_tws = lRTWs_to_DTWs(lrtws)
+            f = ota.is_accepted_delay(delay_tws)
+            if f == -2:
+                return False
+            element.value.append(f)
+        else:
+            return False
+    return True
+
 def add_ctx_normal(dtws, table, ota):
-    """Given a counterexample ctx, guess the reset, check the reset, for each suitable one, add it and its prefixes to R (except those already present in S and R)
+    """Given a counterexample ctx, guess the reset, check the reset,
+    for each suitable one, add it and its prefixes to R (except those
+    already present in S and R).
+
     """
     #print(ctx)
     #print(fix_resets(ctx,ota))
     #local_tws = dRTWs_to_lRTWs(fix_resets(ctx,ota))
     OTAtables = []
-    ctxs = guess_ctx_reset(dtws)
+    ctxs = guess_ctx_reset(dtws, ota)
     for ctx in ctxs:
         local_tws = dRTWs_to_lRTWs(ctx)
         normalize(local_tws)
         if check_guessed_reset(local_tws, table) == True:
-            print(local_tws)
+            #print(local_tws)
             pref = prefixes(local_tws)
             S_tws = [s.tws for s in table.S]
             S_R_tws = [s.tws for s in table.S] + [r.tws for r in table.R]
@@ -572,9 +565,36 @@ def add_ctx_normal(dtws, table, ota):
                         need_add = False
                         break
                 if need_add == True:
-                    temp_element = Element(tws,[])
-                    fill(temp_element, new_E, ota)
+                    temp_element = Element(tws,[],[])
+                    #fill(temp_element, new_E, ota)
                     new_R.append(temp_element)
-            new_OTAtable = OTATable(new_S, new_R, new_E)
-            OTAtables.append(new_OTAtable)
-    return OTAtables
+            if len(new_R) > len(table.R):
+                new_OTAtable = OTATable(new_S, new_R, new_E, parent=table.id, reason="addctx")
+                OTAtables.append(new_OTAtable)
+    #return OTAtables
+    #guess the resets of suffixes for each prefix and fill
+    OTAtables_after_guessing_resets = []
+
+    for otatable in OTAtables:
+        new_r_start_index = len(table.R)
+        new_r_end_index = len(otatable.R)
+        temp_otatables = [otatable]
+        #print(new_r_start_index, new_r_end_index)
+        for i in range(new_r_start_index, new_r_end_index):
+            resets_situations = guess_resets_in_suffixes(otatable)
+            #print(len(resets_situations))
+            new_tables = []
+            for j in range(0, len(resets_situations)):
+                for temp_table in temp_otatables:
+                    new_table = copy.deepcopy(temp_table)
+                    temp_otatable = OTATable(new_table.S, new_table.R, new_table.E, parent=table.id, reason="addctx")
+                    temp_otatable.R[i].suffixes_resets = resets_situations[j]
+                    if True == fill(temp_otatable.R[i],temp_otatable.E,ota):
+                        new_tables.append(temp_otatable)
+            temp_otatables = [tb for tb in new_tables]
+            #print("a", len(temp_otatables))
+        OTAtables_after_guessing_resets = OTAtables_after_guessing_resets + temp_otatables
+        #print("b", len(OTAtables_after_guessing_resets))
+
+    return OTAtables_after_guessing_resets
+

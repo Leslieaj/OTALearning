@@ -66,7 +66,16 @@ def to_fa(otatable, n):
             trans.append(temp_tran)
             trans_number = trans_number + 1
     fa = FA("FA_"+str(n),rtw_alphabet,states,trans,initstate_name,accept_names)
-    return fa , sink_name
+    for tran in fa.trans:
+        action = tran.label[0].action
+        reset = tran.label[0].reset
+        times = [tw.time for tw in tran.label]
+        for tr in fa.trans:
+            if tran.source == tr.source and tran.target == tr.target and  action == tr.label[0].action and reset != tr.label[0].reset:
+                for time in times:
+                    if time in [la.time for la in tr.label]:
+                        return False, None, ""
+    return True, fa , sink_name
 
 def fa_to_ota(fa, sink_name, sigma, n):
     """Transform the finite automaton to an one-clock timed automaton as a hypothesis.
